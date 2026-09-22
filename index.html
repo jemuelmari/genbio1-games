@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biology Lesson Games</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(145deg, #0b1a2e, #1b3b4f);
+      color: #e8f4ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      background: rgba(255,255,255,0.08);
+      padding: 50px 40px;
+      border-radius: 40px;
+      border: 1px solid rgba(120,200,255,0.25);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      max-width: 600px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, #b3e9ff, #6dd5ed, #a8e6cf);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 14px;
+    }
+    p { color: #b3d9e8; margin-bottom: 30px; font-size: 1.1rem; }
+    .btn-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    a.game-link {
+      display: block;
+      padding: 18px 26px;
+      border-radius: 40px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.15rem;
+      transition: 0.15s;
+      color: #07212b;
+    }
+    a.pre {
+      background: linear-gradient(145deg, #ffd166, #f6a5c0);
+      box-shadow: 0 7px 0 #b8842a;
+    }
+    a.quest {
+      background: linear-gradient(145deg, #6dd5ed, #a8e6cf);
+      box-shadow: 0 7px 0 #2a7a8a;
+    }
+    a.game-link:hover { transform: translateY(-2px); }
+    a.game-link:active { transform: translateY(4px); box-shadow: 0 3px 0 #00000044; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔬 Biology Lesson Games</h1>
+    <p>Cell Theory — Interactive Learning</p>
+    <div class="btn-grid">
+      <a href="games/mystery-box-detective.html" class="game-link pre">📦 Pre-Lesson: Mystery Box Detective</a>
+      <a href="games/cell-theory-quest.html" class="game-link quest">🧬 Main Lesson: Cell Theory Quest</a>
+    </div>
+  </div>
+</body>
+</html>
