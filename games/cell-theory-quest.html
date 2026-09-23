@@ -1,637 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cell Theory Quest · Gamified Lesson</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cell Theory Quest</title>
+<style>
+    :root {
+        --bg: #0a0e1a; --panel: #151b2b; --card: #1e2640;
+        --text: #e2e8f0; --muted: #94a3b8;
+        --green: #10b981; --red: #ef4444; --blue: #3b82f6;
+        --purple: #8b5cf6; --gold: #fbbf24;
     }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
-      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-      background: linear-gradient(145deg, #0b1a2e 0%, #1b3b4f 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+        background: var(--bg); color: var(--text);
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh; display: flex; flex-direction: column;
+        align-items: center; padding: 20px;
+        background-image: radial-gradient(circle at 30% 20%, rgba(59,130,246,0.12), transparent 50%),
+                          radial-gradient(circle at 70% 80%, rgba(139,92,246,0.12), transparent 50%);
     }
-
-    .game-container {
-      max-width: 1100px;
-      width: 100%;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 48px;
-      padding: 25px 30px 35px;
-      box-shadow: 0 30px 40px rgba(0, 0, 0, 0.6), inset 0 1px 4px rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(120, 200, 255, 0.25);
+    header {
+        width: 100%; max-width: 950px;
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 20px;
     }
-
-    /* Header section */
-    .header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
+    .back-btn {
+        background: var(--panel); color: var(--muted);
+        text-decoration: none; padding: 10px 18px;
+        border-radius: 10px; font-weight: bold;
+        border: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.9rem; transition: 0.2s;
     }
-
-    .title-badge {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .back-btn:hover { color: white; background: #2a3450; }
+    .hud { display: flex; gap: 10px; }
+    .hud-box {
+        background: var(--panel); padding: 10px 18px;
+        border-radius: 10px; font-weight: bold; font-size: 0.9rem;
+        border-bottom: 3px solid var(--blue);
     }
+    .hud-box span { color: var(--gold); }
 
-    .title-badge h1 {
-      font-size: 1.9rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #b3e9ff, #6dd5ed, #a8e6cf);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 15px rgba(109, 213, 237, 0.5);
+    .game-wrap {
+        width: 100%; max-width: 950px;
+        background: var(--panel); border-radius: 20px;
+        padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        border: 1px solid rgba(59,130,246,0.2);
     }
-
-    .cell-icon {
-      font-size: 2.2rem;
-      filter: drop-shadow(0 0 8px #6dd5ed);
+    .progress-track {
+        width: 100%; height: 6px; background: rgba(255,255,255,0.08);
+        border-radius: 10px; margin-bottom: 25px; overflow: hidden;
     }
-
-    .stats {
-      display: flex;
-      gap: 20px;
-      background: rgba(0, 20, 40, 0.7);
-      padding: 10px 22px;
-      border-radius: 60px;
-      border: 1px solid #2d6a7a;
-      box-shadow: 0 5px 0 #0a1a24;
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #e0f2fe;
-      font-weight: 600;
-      font-size: 1.2rem;
-    }
-
-    .stat-icon {
-      font-size: 1.5rem;
-    }
-
-    /* Progress bar */
-    .progress-area {
-      margin: 5px 0 18px;
-    }
-
-    .progress-bar-bg {
-      width: 100%;
-      height: 14px;
-      background: #0e2a36;
-      border-radius: 20px;
-      box-shadow: inset 0 2px 6px #00000066;
-      border: 1px solid #2a6577;
-    }
-
     .progress-fill {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, #6dd5ed, #a8e6cf, #f6d365);
-      border-radius: 20px;
-      transition: width 0.5s cubic-bezier(0.34, 1.3, 0.64, 1);
-      box-shadow: 0 0 12px #6dd5ed;
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        transition: width 0.5s;
     }
 
-    /* Main game board */
-    .game-board {
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
+    #start-screen, #results-screen { display: none; text-align: center; }
+    #start-screen.active, #results-screen.active { display: block; }
+    #start-screen h1, #results-screen h1 {
+        font-size: 2rem; margin-bottom: 15px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
+    #start-screen p, #results-screen p {
+        color: var(--muted); font-size: 1rem;
+        line-height: 1.6; max-width: 640px; margin: 0 auto 20px;
+    }
+    .icon-big {
+        font-size: 4rem; margin-bottom: 10px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: white; border: none; padding: 16px 45px;
+        border-radius: 50px; font-size: 1.05rem; font-weight: bold;
+        text-transform: uppercase; letter-spacing: 1px;
+        cursor: pointer; transition: 0.2s;
+        box-shadow: 0 0 25px rgba(59,130,246,0.5);
+    }
+    .btn-primary:hover { transform: scale(1.05); }
 
-    /* Question card */
-    .question-card {
-      background: rgba(10, 28, 45, 0.8);
-      border-radius: 36px;
-      padding: 24px 28px;
-      border: 1px solid #2c7a8f;
-      box-shadow: 0 12px 0 #081c26, 0 0 20px rgba(109, 213, 237, 0.2);
-      transition: all 0.2s;
+    #play-screen { display: none; }
+    #play-screen.active { display: block; }
+    .q-tag {
+        display: inline-block; background: rgba(59,130,246,0.15);
+        color: #93c5fd; padding: 6px 16px; border-radius: 20px;
+        font-size: 0.8rem; font-weight: bold;
+        text-transform: uppercase; letter-spacing: 2px;
+        margin-bottom: 15px;
     }
-
-    .question-text {
-      font-size: 1.7rem;
-      font-weight: 600;
-      color: #e6f7ff;
-      line-height: 1.4;
-      margin-bottom: 20px;
-      text-shadow: 0 2px 5px #00000055;
+    .q-text {
+        font-size: 1.4rem; font-weight: 600;
+        margin-bottom: 22px; line-height: 1.4;
     }
-
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 6px;
+    .options {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 12px; margin-bottom: 20px;
     }
-
-    .option-btn {
-      background: #1a3c4c;
-      border: 2px solid #2b6a7c;
-      color: #d7f0ff;
-      padding: 18px 12px;
-      border-radius: 24px;
-      font-size: 1.15rem;
-      font-weight: 500;
-      text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: all 0.15s;
-      box-shadow: 0 6px 0 #0b1f29;
-      letter-spacing: 0.2px;
+    .option {
+        background: var(--card); border: 2px solid rgba(255,255,255,0.1);
+        padding: 18px; border-radius: 12px; cursor: pointer;
+        transition: 0.2s; font-size: 0.95rem; font-weight: 600;
+        text-align: center;
     }
-
-    .option-btn:hover:not(:disabled) {
-      background: #225f72;
-      border-color: #6dd5ed;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 0 #0b1f29;
-    }
-
-    .option-btn.correct {
-      background: #1c6b4b;
-      border-color: #a8e6cf;
-      box-shadow: 0 6px 0 #0d3b2a;
-      color: white;
-    }
-
-    .option-btn.incorrect {
-      background: #7a2e2e;
-      border-color: #f6a5a5;
-      box-shadow: 0 6px 0 #3d1414;
-      color: #ffe0e0;
-    }
-
-    .option-btn:disabled {
-      opacity: 0.8;
-      cursor: not-allowed;
-      transform: scale(0.98);
-    }
-
-    .option-letter {
-      font-weight: 800;
-      background: #0a2733;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      font-size: 1.2rem;
-      color: #a8e6cf;
-      flex-shrink: 0;
-      border: 1px solid #4e9eb3;
-    }
-
-    /* Feedback & action row */
-    .action-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+    .option:hover { border-color: var(--blue); transform: translateY(-3px); }
+    .option.correct { background: rgba(16,185,129,0.25); border-color: var(--green); }
+    .option.wrong { background: rgba(239,68,68,0.25); border-color: var(--red); }
 
     .feedback {
-      font-size: 1.15rem;
-      font-weight: 500;
-      padding: 8px 18px;
-      border-radius: 40px;
-      background: #0a1e28cc;
-      color: #b3e9ff;
-      border-left: 6px solid #6dd5ed;
-      flex: 1;
-      min-width: 200px;
+        display: none; padding: 16px 20px;
+        border-radius: 12px; margin-bottom: 15px;
+        line-height: 1.5; font-size: 0.95rem;
     }
+    .feedback.show { display: block; animation: slide 0.3s; }
+    .feedback.ok { background: rgba(16,185,129,0.15); border-left: 4px solid var(--green); }
+    .feedback.bad { background: rgba(239,68,68,0.15); border-left: 4px solid var(--red); }
+    @keyframes slide { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
 
     .next-btn {
-      background: linear-gradient(145deg, #2d8f9e, #1b6a7a);
-      border: none;
-      color: white;
-      font-weight: 700;
-      font-size: 1.2rem;
-      padding: 14px 36px;
-      border-radius: 40px;
-      cursor: pointer;
-      box-shadow: 0 7px 0 #0d3f4b, 0 0 15px #2d8f9e88;
-      transition: all 0.1s;
-      letter-spacing: 1px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+        background: var(--purple); color: white;
+        border: none; padding: 12px 30px; border-radius: 10px;
+        font-weight: bold; cursor: pointer; display: none;
+        font-size: 0.95rem; transition: 0.2s;
+    }
+    .next-btn.show { display: inline-block; }
+    .next-btn:hover { background: #7c3aed; transform: scale(1.05); }
+
+    .level-badge { font-size: 4rem; margin: 10px 0; }
+    .level-title {
+        font-size: 1.6rem; font-weight: bold;
+        color: var(--gold); margin-bottom: 10px;
+    }
+    .score-big { font-size: 3rem; font-weight: 900; margin: 15px 0; }
+    .action-row {
+        display: flex; gap: 12px;
+        justify-content: center; flex-wrap: wrap; margin-top: 20px;
     }
 
-    .next-btn:active:not(:disabled) {
-      transform: translateY(4px);
-      box-shadow: 0 3px 0 #0d3f4b;
+    @media (max-width: 600px) {
+        .options { grid-template-columns: 1fr; }
+        .q-text { font-size: 1.15rem; }
+        .game-wrap { padding: 20px; }
     }
-
-    .next-btn:disabled {
-      opacity: 0.4;
-      cursor: default;
-      box-shadow: 0 4px 0 #0d3f4b;
-      transform: translateY(3px);
-    }
-
-    /* footer / reset */
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 18px;
-      color: #8abfd0;
-      font-size: 0.95rem;
-    }
-
-    .reset-btn {
-      background: transparent;
-      border: 2px solid #2b6a7c;
-      color: #b3e9ff;
-      padding: 8px 22px;
-      border-radius: 40px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .reset-btn:hover {
-      background: #1f4e5e;
-      border-color: #6dd5ed;
-    }
-
-    /* Modal for win */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #000000bb;
-      backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      visibility: hidden;
-      opacity: 0;
-      transition: 0.2s;
-    }
-
-    .modal-overlay.active {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    .modal-card {
-      background: #0f2c3a;
-      border-radius: 48px;
-      padding: 40px 48px;
-      text-align: center;
-      border: 2px solid #6dd5ed;
-      box-shadow: 0 30px 40px #00000099, 0 0 60px #6dd5ed66;
-      max-width: 500px;
-      transform: scale(0.9);
-      transition: 0.2s;
-    }
-
-    .modal-overlay.active .modal-card {
-      transform: scale(1);
-    }
-
-    .modal-card h2 {
-      font-size: 2.5rem;
-      color: #a8e6cf;
-      margin-bottom: 12px;
-    }
-
-    .modal-card p {
-      font-size: 1.3rem;
-      color: #c2e5f2;
-      margin-bottom: 28px;
-    }
-
-    .modal-card button {
-      background: #6dd5ed;
-      border: none;
-      padding: 14px 38px;
-      border-radius: 40px;
-      font-weight: 800;
-      font-size: 1.3rem;
-      color: #07212b;
-      cursor: pointer;
-      box-shadow: 0 8px 0 #2a7a8a;
-      transition: 0.1s;
-    }
-
-    .modal-card button:active {
-      transform: translateY(4px);
-      box-shadow: 0 4px 0 #2a7a8a;
-    }
-
-    @media (max-width: 700px) {
-      .game-container { padding: 18px; }
-      .options-grid { grid-template-columns: 1fr; }
-      .question-text { font-size: 1.3rem; }
-      .title-badge h1 { font-size: 1.4rem; }
-      .stats { padding: 6px 12px; gap: 10px; font-size: 1rem; }
-    }
-  </style>
+</style>
 </head>
 <body>
-  <div class="game-container">
-    <!-- HEADER -->
-    <div class="header">
-      <div class="title-badge">
-        <span class="cell-icon">🔬</span>
+
+<header>
+    <a href="../index.html" class="back-btn">← Dashboard</a>
+    <div class="hud">
+        <div class="hud-box">Q: <span id="hud-q">0</span>/10</div>
+        <div class="hud-box">Score: <span id="hud-score">0</span></div>
+    </div>
+</header>
+
+<div class="game-wrap">
+    <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+
+    <div id="start-screen" class="active">
+        <div class="icon-big">🔬</div>
         <h1>Cell Theory Quest</h1>
-      </div>
-      <div class="stats">
-        <div class="stat-item"><span class="stat-icon">⭐</span> <span id="scoreDisplay">0</span></div>
-        <div class="stat-item"><span class="stat-icon">🧪</span> <span id="questionCounter">1/12</span></div>
-      </div>
+        <p>Embark on a journey through the history of cell discovery! Test your knowledge of the scientists, their contributions, and the three principles of Cell Theory.</p>
+        <button class="btn-primary" id="start-btn">Start Quest</button>
     </div>
 
-    <!-- PROGRESS -->
-    <div class="progress-area">
-      <div class="progress-bar-bg">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+    <div id="play-screen">
+        <div class="q-tag" id="q-tag">Question 1</div>
+        <div class="q-text" id="q-text"></div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="next-btn">Next →</button>
     </div>
 
-    <!-- GAME BOARD -->
-    <div class="game-board">
-      <div class="question-card">
-        <div class="question-text" id="questionText">Loading question...</div>
-        <div class="options-grid" id="optionsContainer"></div>
+    <div id="results-screen">
+        <div class="level-badge" id="level-badge">🌟</div>
+        <h1 id="results-title">Quest Complete!</h1>
+        <div class="level-title" id="level-title"></div>
+        <div class="score-big" id="final-score">0/10</div>
+        <p id="results-msg"></p>
         <div class="action-row">
-          <div class="feedback" id="feedbackMessage">Select an answer above</div>
-          <button class="next-btn" id="nextBtn" disabled>Next →</button>
+            <button class="btn-primary" id="restart-btn">Retry Quest</button>
+            <a href="../index.html" class="back-btn" style="padding:16px 30px;">← Dashboard</a>
         </div>
-      </div>
     </div>
+</div>
 
-    <!-- FOOTER -->
-    <div class="footer">
-      <span>🧬 Historical development & postulates</span>
-      <button class="reset-btn" id="resetBtn">⟲ Restart</button>
-    </div>
-  </div>
+<script>
+const questions = [
+    { q: "Who first observed cells using a homemade microscope in 1665?",
+      options: ["Anton van Leeuwenhoek", "Robert Hooke", "Matthias Schleiden", "Rudolf Virchow"], correct: 1,
+      explain: "Robert Hooke observed cork under a microscope and called the tiny compartments 'cells' — a term that stuck!"
+    },
+    { q: "What did Anton van Leeuwenhoek discover?",
+      options: ["The nucleus", "Living single-celled organisms", "Cell theory", "Plant cells only"], correct: 1,
+      explain: "Leeuwenhoek was the first to observe living microorganisms (bacteria, protists) using his advanced microscopes."
+    },
+    { q: "Which scientist concluded that ALL PLANTS are made of cells?",
+      options: ["Theodor Schwann", "Matthias Schleiden", "Robert Hooke", "Rudolf Virchow"], correct: 1,
+      explain: "Matthias Schleiden (1838) concluded that all plants are composed of cells."
+    },
+    { q: "Which scientist concluded that ALL ANIMALS are made of cells?",
+      options: ["Theodor Schwann", "Matthias Schleiden", "Robert Brown", "Rudolf Virchow"], correct: 0,
+      explain: "Theodor Schwann (1839) extended the cell idea to animals, concluding all animals are made of cells."
+    },
+    { q: "Who stated that 'all cells come from pre-existing cells'?",
+      options: ["Robert Hooke", "Rudolf Virchow", "Anton van Leeuwenhoek", "Theodor Schwann"], correct: 1,
+      explain: "Rudolf Virchow (1855) proposed 'Omnis cellula e cellula' — all cells arise from pre-existing cells."
+    },
+    { q: "What are the THREE principles of Cell Theory?",
+      options: [
+        "Cells have nuclei, DNA, and ribosomes",
+        "All living things are made of cells; cells are the basic unit of life; all cells come from existing cells",
+        "Cells are small, colorful, and alive",
+        "Cells reproduce, respire, and die"
+      ], correct: 1,
+      explain: "The three principles: (1) All living organisms are made of cells, (2) The cell is the basic unit of life, (3) All cells arise from pre-existing cells."
+    },
+    { q: "Which of these is NOT a principle of Cell Theory?",
+      options: [
+        "All living things are composed of cells",
+        "Cells are the basic unit of structure and function",
+        "All cells contain a nucleus",
+        "All cells come from pre-existing cells"
+      ], correct: 2,
+      explain: "Not all cells have a nucleus! Prokaryotes (bacteria) lack a nucleus. This is NOT part of Cell Theory."
+    },
+    { q: "Why was the invention of the microscope important to Cell Theory?",
+      options: [
+        "It helped scientists see cells for the first time",
+        "It was used to cure diseases",
+        "It helped with cooking",
+        "It was needed to grow plants"
+      ], correct: 0,
+      explain: "Without microscopes, cells were invisible. The microscope made cell discovery and Cell Theory possible."
+    },
+    { q: "Which statement BEST describes a cell?",
+      options: [
+        "The largest unit of an organism",
+        "The basic structural and functional unit of life",
+        "Only found in animals",
+        "A type of molecule"
+      ], correct: 1,
+      explain: "The cell is the basic structural AND functional unit of all living things — everything alive is made of cells."
+    },
+    { q: "What technology helped scientists confirm and expand Cell Theory?",
+      options: [
+        "Telescope",
+        "Electron microscope",
+        "Barometer",
+        "Thermometer"
+      ], correct: 1,
+      explain: "The electron microscope (invented 1930s) revealed cell structures in incredible detail, confirming and expanding Cell Theory."
+    }
+];
 
-  <!-- WIN MODAL -->
-  <div class="modal-overlay" id="winModal">
-    <div class="modal-card">
-      <h2>🏆 CELL MASTER!</h2>
-      <p>You've completed the Cell Theory Quest!</p>
-      <p style="font-size:1.6rem; margin-bottom:28px;">Score: <span id="finalScore"></span></p>
-      <button id="playAgainBtn">Play again</button>
-    </div>
-  </div>
+let state = { idx: 0, score: 0, answered: false };
+const D = {
+    start: document.getElementById('start-screen'),
+    play: document.getElementById('play-screen'),
+    results: document.getElementById('results-screen'),
+    startBtn: document.getElementById('start-btn'),
+    restartBtn: document.getElementById('restart-btn'),
+    nextBtn: document.getElementById('next-btn'),
+    qTag: document.getElementById('q-tag'),
+    qText: document.getElementById('q-text'),
+    options: document.getElementById('options'),
+    feedback: document.getElementById('feedback'),
+    hudQ: document.getElementById('hud-q'),
+    hudScore: document.getElementById('hud-score'),
+    prog: document.getElementById('prog'),
+    levelBadge: document.getElementById('level-badge'),
+    levelTitle: document.getElementById('level-title'),
+    finalScore: document.getElementById('final-score'),
+    resultsMsg: document.getElementById('results-msg')
+};
 
-  <script>
-    (function() {
-      // ---------- QUESTION BANK (12 questions) ----------
-      const questions = [
-        {
-          question: "Who first observed cork under a microscope and coined the term 'cell'?",
-          options: ["Anton van Leeuwenhoek", "Robert Hooke", "Matthias Schleiden", "Rudolf Virchow"],
-          correct: 1,
-          explanation: "Robert Hooke (1665) looked at cork and named the tiny compartments 'cells'."
-        },
-        {
-          question: "Which scientist was the first to observe LIVING cells?",
-          options: ["Robert Brown", "Theodor Schwann", "Anton van Leeuwenhoek", "Robert Hooke"],
-          correct: 2,
-          explanation: "Anton van Leeuwenhoek (1674) observed living cells like bacteria and protozoa."
-        },
-        {
-          question: "Who discovered the nucleus inside a plant cell?",
-          options: ["Robert Brown", "Matthias Schleiden", "Rudolf Virchow", "Theodor Schwann"],
-          correct: 0,
-          explanation: "Robert Brown (1831) discovered and named the nucleus."
-        },
-        {
-          question: "Which two scientists proposed that all plants and animals are made of cells?",
-          options: ["Hooke & Leeuwenhoek", "Schleiden & Schwann", "Brown & Virchow", "Virchow & Hooke"],
-          correct: 1,
-          explanation: "Matthias Schleiden (1838, plants) and Theodor Schwann (1839, animals)."
-        },
-        {
-          question: "Who stated 'Omnis cellula e cellula' — all cells arise from pre-existing cells?",
-          options: ["Robert Hooke", "Anton van Leeuwenhoek", "Rudolf Virchow", "Robert Brown"],
-          correct: 2,
-          explanation: "Rudolf Virchow (1855) proposed that cells only come from other cells."
-        },
-        {
-          question: "Which of the following is NOT one of the three original postulates of cell theory?",
-          options: [
-            "All living organisms are composed of one or more cells.",
-            "The cell is the basic unit of structure and function.",
-            "All cells arise from pre-existing cells.",
-            "Cells contain hereditary information in the form of DNA."
-          ],
-          correct: 3,
-          explanation: "DNA as hereditary material is a MODERN addition, not an original postulate."
-        },
-        {
-          question: "What invention was essential for the discovery of cells?",
-          options: ["The telescope", "The microscope", "The stethoscope", "The barometer"],
-          correct: 1,
-          explanation: "The microscope allowed scientists to see the unseen world of cells."
-        },
-        {
-          question: "Which scientist's work directly helped disprove spontaneous generation?",
-          options: ["Robert Hooke", "Rudolf Virchow", "Anton van Leeuwenhoek", "Matthias Schleiden"],
-          correct: 1,
-          explanation: "Virchow's postulate that cells come from pre-existing cells refuted spontaneous generation."
-        },
-        {
-          question: "What did Robert Hooke actually observe in cork?",
-          options: ["Living cells", "Dead cell walls", "Nuclei", "Bacteria"],
-          correct: 1,
-          explanation: "Hooke saw the empty cell walls of dead cork cells."
-        },
-        {
-          question: "Which modern addition to cell theory is correct?",
-          options: [
-            "Cells contain hereditary information (DNA).",
-            "All cells are exactly the same size.",
-            "Cells can arise from non-living matter.",
-            "Only animals are made of cells."
-          ],
-          correct: 0,
-          explanation: "Modern cell theory includes that cells contain DNA and have similar chemical composition."
-        },
-        {
-          question: "Theodor Schwann concluded that:",
-          options: ["All plants are made of cells", "All animals are made of cells", "Cells come from pre-existing cells", "The nucleus is the control center"],
-          correct: 1,
-          explanation: "Schwann (1839) stated that all animals are composed of cells."
-        },
-        {
-          question: "Which sequence correctly shows the timeline of these scientists?",
-          options: [
-            "Hooke → Leeuwenhoek → Brown → Schleiden → Schwann → Virchow",
-            "Leeuwenhoek → Hooke → Schleiden → Schwann → Brown → Virchow",
-            "Hooke → Brown → Leeuwenhoek → Schwann → Schleiden → Virchow",
-            "Schleiden → Schwann → Hooke → Leeuwenhoek → Brown → Virchow"
-          ],
-          correct: 0,
-          explanation: "Hooke (1665), Leeuwenhoek (1674), Brown (1831), Schleiden (1838), Schwann (1839), Virchow (1855)."
-        }
-      ];
+let audioCtx;
+function beep(f, d, t, v) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = t || 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(v || 0.15, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+        o.start(); o.stop(audioCtx.currentTime + d);
+    } catch (e) {}
+}
+const sfx = {
+    click: () => beep(500, 0.08, 'triangle', 0.1),
+    ok: () => { beep(600, 0.12); setTimeout(() => beep(900, 0.15), 100); },
+    bad: () => beep(150, 0.3, 'sawtooth', 0.15),
+    done: () => { beep(500, 0.15); setTimeout(() => beep(700, 0.15), 150); setTimeout(() => beep(1000, 0.3), 300); }
+};
 
-      // ---------- GAME STATE ----------
-      let currentIndex = 0;
-      let score = 0;
-      let answered = false;
-      let totalQuestions = questions.length;
+function startGame() {
+    state = { idx: 0, score: 0, answered: false };
+    D.start.classList.remove('active');
+    D.results.classList.remove('active');
+    D.play.classList.add('active');
+    D.hudScore.textContent = 0;
+    loadQ();
+}
 
-      // DOM elements
-      const questionText = document.getElementById('questionText');
-      const optionsContainer = document.getElementById('optionsContainer');
-      const feedbackMessage = document.getElementById('feedbackMessage');
-      const nextBtn = document.getElementById('nextBtn');
-      const scoreDisplay = document.getElementById('scoreDisplay');
-      const questionCounter = document.getElementById('questionCounter');
-      const progressFill = document.getElementById('progressFill');
-      const resetBtn = document.getElementById('resetBtn');
-      const winModal = document.getElementById('winModal');
-      const finalScoreSpan = document.getElementById('finalScore');
-      const playAgainBtn = document.getElementById('playAgainBtn');
+function loadQ() {
+    if (state.idx >= questions.length) return endGame();
+    state.answered = false;
+    const q = questions[state.idx];
+    D.qTag.textContent = `Question ${state.idx + 1}`;
+    D.qText.textContent = q.q;
+    D.hudQ.textContent = state.idx + 1;
+    D.prog.style.width = `${(state.idx / questions.length) * 100}%`;
+    D.options.innerHTML = '';
+    D.feedback.className = 'feedback';
+    D.nextBtn.classList.remove('show');
 
-      // ---------- RENDER FUNCTIONS ----------
-      function renderQuestion() {
-        const q = questions[currentIndex];
-        questionText.textContent = q.question;
-        optionsContainer.innerHTML = '';
+    q.options.forEach((opt, i) => {
+        const el = document.createElement('div');
+        el.className = 'option';
+        el.textContent = opt;
+        el.addEventListener('click', () => answer(i));
+        D.options.appendChild(el);
+    });
+}
 
-        const letters = ['A', 'B', 'C', 'D'];
-        q.options.forEach((opt, idx) => {
-          const btn = document.createElement('button');
-          btn.classList.add('option-btn');
-          btn.innerHTML = `<span class="option-letter">${letters[idx]}</span> ${opt}`;
-          btn.dataset.index = idx;
-          btn.addEventListener('click', () => handleAnswer(idx, btn));
-          optionsContainer.appendChild(btn);
-        });
+function answer(i) {
+    if (state.answered) return;
+    state.answered = true;
+    const q = questions[state.idx];
+    const isRight = i === q.correct;
 
-        // Reset feedback & next button
-        feedbackMessage.textContent = 'Select an answer above';
-        feedbackMessage.style.borderLeftColor = '#6dd5ed';
-        nextBtn.disabled = true;
-        answered = false;
+    document.querySelectorAll('.option').forEach((o, idx) => {
+        o.style.pointerEvents = 'none';
+        if (idx === q.correct) o.classList.add('correct');
+        else if (idx === i) o.classList.add('wrong');
+    });
 
-        // Update counters
-        scoreDisplay.textContent = score;
-        questionCounter.textContent = `${currentIndex + 1}/${totalQuestions}`;
-        updateProgress();
-      }
+    if (isRight) {
+        sfx.ok(); state.score++;
+        D.hudScore.textContent = state.score;
+        D.feedback.className = 'feedback show ok';
+        D.feedback.innerHTML = `✅ <strong>Correct!</strong> ${q.explain}`;
+    } else {
+        sfx.bad();
+        D.feedback.className = 'feedback show bad';
+        D.feedback.innerHTML = `❌ <strong>Not quite.</strong> ${q.explain}`;
+    }
 
-      function handleAnswer(selectedIdx, btnElement) {
-        if (answered) return;
-        answered = true;
+    D.nextBtn.classList.add('show');
+    D.nextBtn.textContent = state.idx < questions.length - 1 ? 'Next →' : 'See Results →';
+}
 
-        const q = questions[currentIndex];
-        const isCorrect = (selectedIdx === q.correct);
+D.nextBtn.addEventListener('click', () => {
+    sfx.click();
+    state.idx++;
+    if (state.idx >= questions.length) endGame();
+    else loadQ();
+});
 
-        // Disable all option buttons
-        const allBtns = document.querySelectorAll('.option-btn');
-        allBtns.forEach(btn => { btn.disabled = true; });
+function endGame() {
+    D.play.classList.remove('active');
+    D.results.classList.add('active');
+    D.prog.style.width = '100%';
+    D.finalScore.textContent = `${state.score}/${questions.length}`;
+    const pct = state.score / questions.length;
+    let badge, title, msg;
+    if (pct >= 0.85) { badge = '🏆'; title = 'Cell Theory Master!'; msg = 'Outstanding! You know the history and principles of Cell Theory like a true scientist.'; }
+    else if (pct >= 0.6) { badge = '🔬'; title = 'Rising Researcher'; msg = 'Good work! Review the scientists and their contributions to strengthen your understanding.'; }
+    else { badge = '🧫'; title = 'Curious Explorer'; msg = 'Keep exploring! Cell Theory is the foundation of biology — you will get there with practice.'; }
+    D.levelBadge.textContent = badge;
+    D.levelTitle.textContent = title;
+    D.resultsMsg.textContent = msg;
+    sfx.done();
+}
 
-        // Highlight correct & incorrect
-        allBtns.forEach((btn, idx) => {
-          if (idx === q.correct) {
-            btn.classList.add('correct');
-          } else if (idx === selectedIdx && !isCorrect) {
-            btn.classList.add('incorrect');
-          }
-        });
-
-        // Update score
-        if (isCorrect) {
-          score += 1;
-          scoreDisplay.textContent = score;
-          feedbackMessage.textContent = `✅ Correct! ${q.explanation}`;
-          feedbackMessage.style.borderLeftColor = '#a8e6cf';
-        } else {
-          feedbackMessage.textContent = `❌ Not quite. ${q.explanation}`;
-          feedbackMessage.style.borderLeftColor = '#f6a5a5';
-        }
-
-        // Enable next button
-        nextBtn.disabled = false;
-        updateProgress();
-      }
-
-      function updateProgress() {
-        const percent = ((currentIndex + (answered ? 1 : 0)) / totalQuestions) * 100;
-        progressFill.style.width = `${percent}%`;
-      }
-
-      function nextQuestion() {
-        if (currentIndex < totalQuestions - 1) {
-          currentIndex++;
-          renderQuestion();
-        } else {
-          // Game finished — show modal
-          finalScoreSpan.textContent = `${score} / ${totalQuestions}`;
-          winModal.classList.add('active');
-          // progress fill full
-          progressFill.style.width = '100%';
-        }
-      }
-
-      function resetGame() {
-        currentIndex = 0;
-        score = 0;
-        answered = false;
-        winModal.classList.remove('active');
-        renderQuestion();
-        scoreDisplay.textContent = '0';
-        progressFill.style.width = '0%';
-      }
-
-      // ---------- EVENT LISTENERS ----------
-      nextBtn.addEventListener('click', nextQuestion);
-
-      resetBtn.addEventListener('click', resetGame);
-
-      playAgainBtn.addEventListener('click', () => {
-        winModal.classList.remove('active');
-        resetGame();
-      });
-
-      // Close modal on overlay click (optional, but keep play again)
-      winModal.addEventListener('click', (e) => {
-        if (e.target === winModal) {
-          // optional: keep open? we can just keep it.
-        }
-      });
-
-      // Start game
-      renderQuestion();
-    })();
-  </script>
+D.startBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+D.restartBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+</script>
 </body>
 </html>
