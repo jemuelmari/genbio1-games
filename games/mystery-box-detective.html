@@ -278,4 +278,121 @@ const D = {
     startBtn: document.getElementById('start-btn'),
     restartBtn: document.getElementById('restart-btn'),
     nextBtn: document.getElementById('next-btn'),
-    clueEmoji: document.getElementById
+    clueEmoji: document.getElementById('clue-emoji'),
+    clueText: document.getElementById('clue-text'),
+    options: document.getElementById('options'),
+    feedback: document.getElementById('feedback'),
+    hudQ: document.getElementById('hud-q'),
+    hudScore: document.getElementById('hud-score'),
+    prog: document.getElementById('prog'),
+    levelBadge: document.getElementById('level-badge'),
+    levelTitle: document.getElementById('level-title'),
+    finalScore: document.getElementById('final-score'),
+    resultsMsg: document.getElementById('results-msg')
+};
+
+let audioCtx;
+function beep(f, d, t, v) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = t || 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(v || 0.15, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+        o.start(); o.stop(audioCtx.currentTime + d);
+    } catch (e) {}
+}
+const sfx = {
+    click: () => beep(500, 0.08, 'triangle', 0.1),
+    ok: () => { beep(600, 0.12); setTimeout(() => beep(900, 0.15), 100); },
+    bad: () => beep(150, 0.3, 'sawtooth', 0.15),
+    done: () => { beep(500, 0.15); setTimeout(() => beep(700, 0.15), 150); setTimeout(() => beep(1000, 0.3), 300); }
+};
+
+function startGame() {
+    state = { idx: 0, score: 0, answered: false };
+    D.start.classList.remove('active');
+    D.results.classList.remove('active');
+    D.play.classList.add('active');
+    D.hudScore.textContent = 0;
+    loadCase();
+}
+
+function loadCase() {
+    if (state.idx >= cases.length) return endGame();
+    state.answered = false;
+    const c = cases[state.idx];
+    D.clueEmoji.textContent = c.emoji;
+    D.clueText.textContent = c.clue;
+    document.querySelector('.clue-label').textContent = `Clue #${state.idx + 1}`;
+    D.hudQ.textContent = state.idx + 1;
+    D.prog.style.width = `${(state.idx / cases.length) * 100}%`;
+    D.options.innerHTML = '';
+    D.feedback.className = 'feedback';
+    D.nextBtn.classList.remove('show');
+
+    c.options.forEach((opt, i) => {
+        const el = document.createElement('div');
+        el.className = 'option';
+        el.textContent = opt;
+        el.addEventListener('click', () => answer(i));
+        D.options.appendChild(el);
+    });
+}
+
+function answer(i) {
+    if (state.answered) return;
+    state.answered = true;
+    const c = cases[state.idx];
+    const isRight = i === c.correct;
+
+    document.querySelectorAll('.option').forEach((o, idx) => {
+        o.style.pointerEvents = 'none';
+        if (idx === c.correct) o.classList.add('correct');
+        else if (idx === i) o.classList.add('wrong');
+    });
+
+    if (isRight) {
+        sfx.ok(); state.score++;
+        D.hudScore.textContent = state.score;
+        D.feedback.className = 'feedback show ok';
+        D.feedback.innerHTML = `✅ <strong>Correct!</strong> ${c.explain}`;
+    } else {
+        sfx.bad();
+        D.feedback.className = 'feedback show bad';
+        D.feedback.innerHTML = `❌ <strong>Not quite.</strong> ${c.explain}`;
+    }
+
+    D.nextBtn.classList.add('show');
+    D.nextBtn.textContent = state.idx < cases.length - 1 ? 'Next Case →' : 'See Results →';
+}
+
+D.nextBtn.addEventListener('click', () => {
+    sfx.click();
+    state.idx++;
+    if (state.idx >= cases.length) endGame();
+    else loadCase();
+});
+
+function endGame() {
+    D.play.classList.remove('active');
+    D.results.classList.add('active');
+    D.prog.style.width = '100%';
+    D.finalScore.textContent = `${state.score}/${cases.length}`;
+    const pct = state.score / cases.length;
+    let badge, title, msg;
+    if (pct >= 0.85) { badge = '🕵️'; title = 'Master Detective!'; msg = 'Incredible! You identified every cell structure with ease. Nothing gets past you.'; }
+    else if (pct >= 0.6) { badge = '🔍'; title = 'Sharp Investigator'; msg = 'Well done! You solved most cases. Review the ones you missed to reach mastery.'; }
+    else { badge = '📦'; title = 'Rookie Detective'; msg = 'Good start! Keep practicing — cell structures will become second nature soon.'; }
+    D.levelBadge.textContent = badge;
+    D.levelTitle.textContent = title;
+    D.resultsMsg.textContent = msg;
+    sfx.done();
+}
+
+D.startBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+D.restartBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+</script>
+</body>
+</html>
