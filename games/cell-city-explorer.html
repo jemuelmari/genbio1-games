@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cell City Explorer</title>
+<style>
+    :root {
+        --bg: #0a0e1a; --panel: #151b2b; --card: #1e2640;
+        --text: #e2e8f0; --muted: #94a3b8;
+        --green: #10b981; --red: #ef4444; --blue: #3b82f6;
+        --purple: #8b5cf6; --gold: #fbbf24; --pink: #ec4899;
+        --cyan: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+        background: var(--bg); color: var(--text);
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh; display: flex; flex-direction: column;
+        align-items: center; padding: 20px;
+        background-image: radial-gradient(circle at 20% 20%, rgba(139,92,246,0.15), transparent 50%),
+                          radial-gradient(circle at 80% 80%, rgba(6,182,212,0.12), transparent 50%);
+        overflow-x: hidden;
+    }
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .particle { position: absolute; border-radius: 50%; opacity: 0.15; animation: float-up linear infinite; }
+    @keyframes float-up {
+        from { transform: translateY(100vh) scale(0.5); opacity: 0; }
+        10% { opacity: 0.15; }
+        90% { opacity: 0.15; }
+        to { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+    }
+
+    header {
+        width: 100%; max-width: 950px;
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 20px;
+        position: relative; z-index: 2;
+    }
+    .back-btn {
+        background: var(--panel); color: var(--muted);
+        text-decoration: none; padding: 10px 18px;
+        border-radius: 10px; font-weight: bold;
+        border: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.9rem; transition: 0.2s;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .back-btn:hover { color: white; background: #2a3450; transform: translateX(-3px); }
+
+    .hud { display: flex; gap: 10px; align-items: center; }
+    .hud-box {
+        background: var(--panel); padding: 10px 16px;
+        border-radius: 10px; font-weight: bold; font-size: 0.85rem;
+        border-bottom: 3px solid var(--purple);
+        color: white;
+    }
+    .hud-box span { color: var(--gold); }
+
+    .sound-toggle {
+        background: var(--panel); border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted); width: 40px; height: 40px;
+        border-radius: 10px; cursor: pointer; font-size: 1.1rem;
+        transition: 0.2s; display: flex; align-items: center; justify-content: center;
+        position: relative;
+    }
+    .sound-toggle:hover { color: white; background: #2a3450; }
+    .sound-toggle.playing::after {
+        content: '';
+        position: absolute; inset: -3px;
+        border-radius: 12px;
+        border: 2px solid var(--cyan);
+        animation: pulse-ring 1.5s ease-out infinite;
+    }
+    @keyframes pulse-ring {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.3); opacity: 0; }
+    }
+
+    .game-wrap {
+        width: 100%; max-width: 950px;
+        background: var(--panel); border-radius: 20px;
+        padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        border: 1px solid rgba(139,92,246,0.25);
+        position: relative; z-index: 2; overflow: hidden;
+    }
+    .progress-track {
+        width: 100%; height: 6px; background: rgba(255,255,255,0.08);
+        border-radius: 10px; margin-bottom: 25px; overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+        transition: width 0.5s ease; border-radius: 10px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+    #start-screen { text-align: center; }
+    .icon-big {
+        font-size: 5rem; margin-bottom: 15px;
+        animation: bounce 2.5s ease-in-out infinite;
+        display: inline-block;
+    }
+    @keyframes bounce {
+        0%,100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+    #start-screen h1 {
+        font-size: 2.4rem; margin-bottom: 15px;
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4, #ec4899);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    #start-screen p {
+        color: var(--muted); font-size: 1.05rem;
+        line-height: 1.6; max-width: 620px; margin: 0 auto 20px;
+    }
+    .big-question {
+        background: rgba(251,191,36,0.1);
+        border-left: 4px solid var(--gold);
+        padding: 18px 22px; border-radius: 10px;
+        margin: 25px auto; max-width: 620px;
+        text-align: left;
+    }
+    .big-question h3 {
+        color: var(--gold); font-size: 0.85rem;
+        text-transform: uppercase; letter-spacing: 2px;
+        margin-bottom: 8px;
+    }
+    .big-question p {
+        color: #fde68a; font-size: 1rem; font-weight: 600;
+        line-height: 1.5;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        color: white; border: none; padding: 16px 45px;
+        border-radius: 50px; font-size: 1.05rem; font-weight: bold;
+        text-transform: uppercase; letter-spacing: 1px;
+        cursor: pointer; transition: 0.2s;
+        box-shadow: 0 0 25px rgba(139,92,246,0.5);
+        margin: 5px;
+    }
+    .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(139,92,246,0.8); }
+    .btn-secondary {
+        background: transparent; color: var(--muted);
+        border: 2px solid rgba(255,255,255,0.15);
+        padding: 14px 35px; border-radius: 50px;
+        font-size: 0.95rem; font-weight: bold;
+        cursor: pointer; transition: 0.2s; margin: 5px;
+        text-decoration: none; display: inline-block;
+    }
+    .btn-secondary:hover { color: white; border-color: #64748b; background: #334155; }
+
+    #tps-screen { text-align: center; }
+    #tps-screen h2 {
+        font-size: 1.8rem; margin-bottom: 20px;
+        background: linear-gradient(135deg, #fbbf24, #ec4899);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .tps-steps {
+        display: grid; gap: 15px;
+        max-width: 620px; margin: 0 auto 25px;
+    }
+    .tps-step {
+        background: var(--card); border-radius: 14px;
+        padding: 20px; text-align: left;
+        border-left: 4px solid var(--purple);
+        display: flex; align-items: flex-start; gap: 15px;
+        transition: 0.3s; cursor: pointer;
+    }
+    .tps-step:hover { transform: translateX(5px); border-left-color: var(--cyan); }
+    .tps-step.active { background: rgba(139,92,246,0.15); border-left-color: var(--gold); }
+    .tps-step .num {
+        background: var(--purple); color: white;
+        width: 32px; height: 32px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold; flex-shrink: 0;
+    }
+    .tps-step h4 { color: white; font-size: 1rem; margin-bottom: 4px; }
+    .tps-step p { color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+
+    .scene-header { text-align: center; margin-bottom: 20px; }
+    .scene-tag {
+        display: inline-block;
+        background: rgba(139,92,246,0.15); color: #c4b5fd;
+        padding: 6px 16px; border-radius: 20px;
+        font-size: 0.8rem; font-weight: bold;
+        text-transform: uppercase; letter-spacing: 2px;
+        margin-bottom: 12px;
+    }
+    .scene-title {
+        font-size: 1.7rem; font-weight: 700;
+        margin-bottom: 8px; line-height: 1.3;
+    }
+    .scene-desc {
+        color: var(--muted); font-size: 1rem;
+        max-width: 640px; margin: 0 auto; line-height: 1.5;
+    }
+
+    .job-prompt {
+        text-align: center; color: var(--muted);
+        font-size: 0.85rem; text-transform: uppercase;
+        letter-spacing: 2px; font-weight: bold;
+        margin: 25px 0 15px 0;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .job-prompt::before, .job-prompt::after {
+        content: ''; width: 40px; height: 1px;
+        background: rgba(255,255,255,0.15);
+    }
+
+    .options {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 12px; margin-bottom: 20px;
+    }
+    .option {
+        background: var(--card); border: 2px solid rgba(255,255,255,0.1);
+        padding: 22px 18px; border-radius: 14px;
+        cursor: pointer; transition: 0.25s;
+        font-weight: 600; font-size: 0.95rem;
+        display: flex; align-items: center; gap: 14px;
+        text-align: left;
+    }
+    .option:hover {
+        border-color: var(--purple);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(139,92,246,0.2);
+    }
+    .option .opt-marker {
+        width: 36px; height: 36px; flex-shrink: 0;
+        border-radius: 50%;
+        background: rgba(139,92,246,0.2);
+        border: 2px solid rgba(139,92,246,0.4);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold; color: #c4b5fd;
+        font-size: 1rem;
+    }
+    .option .opt-text { line-height: 1.35; }
+
+    .option.correct {
+        background: rgba(16,185,129,0.2);
+        border-color: var(--green);
+        box-shadow: 0 0 20px rgba(16,185,129,0.4);
+        animation: correct-pulse 0.5s;
+    }
+    .option.correct .opt-marker {
+        background: var(--green); color: white;
+        border-color: var(--green);
+    }
+    @keyframes correct-pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    .option.wrong {
+        background: rgba(239,68,68,0.2);
+        border-color: var(--red);
+        animation: wrong-shake 0.4s;
+    }
+    .option.wrong .opt-marker {
+        background: var(--red); color: white;
+        border-color: var(--red);
+    }
+    @keyframes wrong-shake {
+        0%,100% { transform: translateX(0); }
+        25% { transform: translateX(-8px); }
+        75% { transform: translateX(8px); }
+    }
+    .option:disabled { cursor: not-allowed; }
+    .option:disabled:not(.correct):not(.wrong) { opacity: 0.35; }
+
+    .feedback {
+        display: none; padding: 18px 22px;
+        border-radius: 14px; margin-bottom: 15px;
+        line-height: 1.55; font-size: 0.95rem;
+        animation: slide 0.4s;
+    }
+    .feedback.show { display: block; }
+    .feedback.ok {
+        background: rgba(16,185,129,0.12);
+        border-left: 4px solid var(--green);
+    }
+    .feedback.bad {
+        background: rgba(239,68,68,0.12);
+        border-left: 4px solid var(--red);
+    }
+    .feedback strong { color: white; }
+    .feedback .label {
+        display: inline-block;
+        background: rgba(255,255,255,0.1);
+        padding: 2px 10px; border-radius: 12px;
+        font-size: 0.75rem; font-weight: bold;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+    @keyframes slide {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .next-btn {
+        background: var(--purple); color: white;
+        border: none; padding: 14px 35px; border-radius: 10px;
+        font-weight: bold; cursor: pointer; display: none;
+        font-size: 0.95rem; transition: 0.2s;
+        margin-top: 5px;
+    }
+    .next-btn.show { display: inline-block; }
+    .next-btn:hover { background: #7c3aed; transform: scale(1.05); }
+
+    #results-screen { text-align: center; }
+    .level-badge {
+        font-size: 5rem; margin: 10px 0;
+        animation: bounce 2s ease-in-out infinite;
+    }
+    #results-screen h1 {
+        font-size: 2rem; margin-bottom: 15px;
+        background: linear-gradient(135deg, #10b981, #06b6d4);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .level-title {
+        font-size: 1.6rem; font-weight: bold;
+        color: var(--gold); margin-bottom: 10px;
+    }
+    .score-big {
+        font-size: 3rem; font-weight: 900;
+        margin: 15px 0; color: white;
+    }
+    .score-big span { font-size: 1.5rem; color: var(--muted); }
+    #results-msg {
+        color: var(--muted); font-size: 1rem;
+        line-height: 1.6; max-width: 620px; margin: 0 auto 20px;
+    }
+    .review-list {
+        background: rgba(239,68,68,0.1);
+        border-left: 4px solid var(--red);
+        padding: 18px 22px; border-radius: 12px;
+        text-align: left; max-width: 620px; margin: 20px auto;
+    }
+    .review-list h3 {
+        color: #fca5a5; margin-bottom: 10px;
+        font-size: 0.95rem; text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .review-list ul {
+        padding-left: 20px; color: #cbd5e1;
+        line-height: 1.7; font-size: 0.9rem;
+    }
+    .action-row {
+        display: flex; gap: 12px;
+        justify-content: center; flex-wrap: wrap; margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+        .options { grid-template-columns: 1fr; }
+        .scene-title { font-size: 1.25rem; }
+        .game-wrap { padding: 20px; }
+        #start-screen h1 { font-size: 1.75rem; }
+        .icon-big { font-size: 3.5rem; }
+        .option { padding: 16px 14px; }
+        .score-big { font-size: 2.2rem; }
+        .hud-box { padding: 8px 12px; font-size: 0.75rem; }
+        .tps-step { padding: 15px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<header>
+    <a href="../index.html" class="back-btn">← Dashboard</a>
+    <div class="hud">
+        <div class="hud-box">Organelle: <span id="hud-q">0</span>/8</div>
+        <div class="hud-box">Score: <span id="hud-score">0</span></div>
+        <button class="sound-toggle" id="sound-toggle" title="Toggle music &amp; sound">🔊</button>
+    </div>
+</header>
+
+<div class="game-wrap">
+    <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+
+    <div id="start-screen" class="screen active">
+        <div class="icon-big">🔬</div>
+        <h1>Cell City Explorer</h1>
+        <p>Yesterday we learned that <strong>all living things are made of cells</strong>, and that cells are the <strong>basic unit of life</strong>.</p>
+        <p>But have you ever wondered… <strong>what's inside a cell?</strong></p>
+
+        <div class="big-question">
+            <h3>🎯 Today's Big Question</h3>
+            <p>How does the structure of each organelle help it do its job?</p>
+        </div>
+
+        <button class="btn-primary" id="to-tps-btn">Think-Pair-Share →</button>
+        <button class="btn-secondary" id="skip-to-game-btn">Skip to Game</button>
+    </div>
+
+    <div id="tps-screen" class="screen">
+        <h2>🤔 Think — Pair — Share</h2>
+        <p style="color: var(--muted); max-width: 620px; margin: 0 auto 25px; line-height: 1.6;">
+            Before we begin, look at your partner. You're both made of cells. But what makes a <strong>muscle cell</strong> different from a <strong>brain cell</strong>? Click each step to explore:
+        </p>
+
+        <div class="tps-steps">
+            <div class="tps-step" data-step="1">
+                <div class="num">1</div>
+                <div>
+                    <h4>💭 THINK</h4>
+                    <p>What do you already know is inside a cell? List every part you can remember — even if you're unsure.</p>
+                </div>
+            </div>
+            <div class="tps-step" data-step="2">
+                <div class="num">2</div>
+                <div>
+                    <h4>👥 PAIR</h4>
+                    <p>Share with your partner. What parts did you both know? What did only one of you remember?</p>
+                </div>
+            </div>
+            <div class="tps-step" data-step="3">
+                <div class="num">3</div>
+                <div>
+                    <h4>🗣️ SHARE</h4>
+                    <p>Be ready to share with the class! We'll confirm or correct what we know as we play.</p>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="start-game-btn">Start the Game 🎮</button>
+    </div>
+
+    <div id="play-screen" class="screen">
+        <div class="scene-header">
+            <div class="scene-tag" id="scene-tag">Organelle #1</div>
+            <div class="scene-title" id="scene-title"></div>
+            <div class="scene-desc" id="scene-desc"></div>
+        </div>
+
+        <div class="job-prompt">🔎 Which job does this organelle do?</div>
+
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="next-btn">Next Organelle →</button>
+    </div>
+
+    <div id="results-screen" class="screen">
+        <div class="level-badge" id="level-badge">🌟</div>
+        <h1 id="results-title">Exploration Complete!</h1>
+        <div class="level-title" id="level-title"></div>
+        <div class="score-big" id="final-score">0<span>/8</span></div>
+        <p id="results-msg"></p>
+        <div class="review-list" id="review-box" style="display:none;">
+            <h3>📚 Organelles to Review</h3>
+            <ul id="review-list"></ul>
+        </div>
+        <div class="action-row">
+            <button class="btn-primary" id="restart-btn">Play Again</button>
+            <a href="../index.html" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const organelles = [
+    {
+        emoji: "🧠",
+        name: "Nucleus",
+        desc: "The large control center of the cell. It contains the cell's DNA and directs all activities.",
+        correctJob: "Stores DNA and controls all cell activities",
+        decoys: [
+            "Produces energy through respiration",
+            "Breaks down waste materials",
+            "Packages proteins for shipping"
+        ],
+        explain: "The nucleus is the control center. It houses DNA — the instructions for building proteins and running the cell. Think of it as the cell's 'brain' or 'command center.'"
+    },
+    {
+        emoji: "⚡",
+        name: "Mitochondrion",
+        desc: "A bean-shaped organelle with folded inner membranes. It's often called the cell's 'powerhouse.'",
+        correctJob: "Produces ATP energy through cellular respiration",
+        decoys: [
+            "Stores water and nutrients",
+            "Contains digestive enzymes",
+            "Captures sunlight for photosynthesis"
+        ],
+        explain: "Mitochondria perform cellular respiration — using oxygen and glucose to make ATP, the cell's energy currency. Muscle cells have MANY mitochondria because they need lots of energy!"
+    },
+    {
+        emoji: "🏭",
+        name: "Ribosome",
+        desc: "Tiny structures that are either free-floating or attached to the rough ER. They're the smallest organelles.",
+        correctJob: "Builds proteins by reading mRNA instructions",
+        decoys: [
+            "Stores genetic material",
+            "Produces ATP energy",
+            "Digests old cell parts"
+        ],
+        explain: "Ribosomes are the protein factories of the cell. They translate mRNA into chains of amino acids — proteins that do almost every job in your body. Without them, cells couldn't function!"
+    },
+    {
+        emoji: "📦",
+        name: "Golgi Body",
+        desc: "A stack of flattened sacs that looks like a stack of pancakes. It's located near the ER.",
+        correctJob: "Modifies, sorts, and ships proteins",
+        decoys: [
+            "Produces ribosomes",
+            "Contains the cell's DNA",
+            "Breaks down fatty acids"
+        ],
+        explain: "The Golgi body is the cell's 'post office.' It modifies proteins made by the ER, packages them into vesicles, and ships them to their destinations — inside or outside the cell."
+    },
+    {
+        emoji: "🛡️",
+        name: "Cell Membrane",
+        desc: "A thin, flexible barrier made of a phospholipid bilayer with embedded proteins.",
+        correctJob: "Controls what enters and exits the cell",
+        decoys: [
+            "Produces proteins for the cell",
+            "Contains chlorophyll",
+            "Digests bacteria"
+        ],
+        explain: "The cell membrane is semi-permeable — it's like a gatekeeper. It lets nutrients and oxygen IN while keeping waste OUT. It also helps cells communicate with each other."
+    },
+    {
+        emoji: "🧹",
+        name: "Lysosome",
+        desc: "A small, round sac filled with powerful digestive enzymes. Mostly found in animal cells.",
+        correctJob: "Breaks down waste, old organelles, and invaders",
+        decoys: [
+            "Stores water for the plant cell",
+            "Produces energy for the cell",
+            "Transports proteins to the Golgi"
+        ],
+        explain: "Lysosomes are the cell's 'recycling center' or 'cleanup crew.' They use enzymes to digest worn-out organelles, food particles, and even invading bacteria."
+    },
+    {
+        emoji: "💧",
+        name: "Vacuole",
+        desc: "A large, fluid-filled sac. In plant cells, it's HUGE and takes up most of the cell's volume.",
+        correctJob: "Stores water, nutrients, and waste; helps maintain pressure",
+        decoys: [
+            "Produces proteins for the cell",
+            "Controls cell division",
+            "Contains the cell's DNA"
+        ],
+        explain: "Vacuoles store materials. Plant cells have ONE large central vacuole that keeps the cell firm (turgor pressure), which is why plants stand upright. Animal cells have smaller, multiple vacuoles."
+    },
+    {
+        emoji: "☀️",
+        name: "Chloroplast",
+        desc: "A green, oval-shaped organelle that contains chlorophyll. Only found in plant cells.",
+        correctJob: "Captures sunlight to make food through photosynthesis",
+        decoys: [
+            "Produces ATP through respiration",
+            "Digests old cell parts",
+            "Controls what enters the cell"
+        ],
+        explain: "Chloroplasts carry out photosynthesis — they use sunlight, CO₂, and water to make glucose (food), releasing oxygen as a byproduct. They're why plants are green AND why we have oxygen to breathe!"
+    }
+];
+
+let state = {
+    idx: 0,
+    score: 0,
+    answered: false,
+    mistakes: [],
+    soundOn: true
+};
+
+const D = {
+    startScreen: document.getElementById('start-screen'),
+    tpsScreen: document.getElementById('tps-screen'),
+    playScreen: document.getElementById('play-screen'),
+    resultsScreen: document.getElementById('results-screen'),
+    toTpsBtn: document.getElementById('to-tps-btn'),
+    skipToGameBtn: document.getElementById('skip-to-game-btn'),
+    startGameBtn: document.getElementById('start-game-btn'),
+    restartBtn: document.getElementById('restart-btn'),
+    nextBtn: document.getElementById('next-btn'),
+    sceneTag: document.getElementById('scene-tag'),
+    sceneTitle: document.getElementById('scene-title'),
+    sceneDesc: document.getElementById('scene-desc'),
+    options: document.getElementById('options'),
+    feedback: document.getElementById('feedback'),
+    hudQ: document.getElementById('hud-q'),
+    hudScore: document.getElementById('hud-score'),
+    prog: document.getElementById('prog'),
+    levelBadge: document.getElementById('level-badge'),
+    levelTitle: document.getElementById('level-title'),
+    finalScore: document.getElementById('final-score'),
+    resultsMsg: document.getElementById('results-msg'),
+    reviewBox: document.getElementById('review-box'),
+    reviewList: document.getElementById('review-list'),
+    soundToggle: document.getElementById('sound-toggle'),
+    particles: document.getElementById('particles')
+};
+
+/* ============================================================
+   AUDIO SYSTEM
+   ============================================================ */
+let audioCtx = null;
+let musicLoop = null;
+let musicGain = null;
+let musicPlaying = false;
+
+function initAudio() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { console.warn('Audio not supported'); }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+/* ---- SFX ---- */
+function beep(freq, dur, type, vol) {
+    if (!state.soundOn || !audioCtx) return;
+    try {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = type || 'sine';
+        o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
+}
+
+const sfx = {
+    click: () => beep(500, 0.08, 'triangle', 0.12),
+    select: () => beep(700, 0.1, 'sine', 0.12),
+    correct: () => {
+        beep(523, 0.15, 'sine', 0.18);
+        setTimeout(() => beep(659, 0.15, 'sine', 0.18), 100);
+        setTimeout(() => beep(784, 0.25, 'sine', 0.18), 200);
+    },
+    wrong: () => {
+        beep(200, 0.15, 'sawtooth', 0.15);
+        setTimeout(() => beep(150, 0.25, 'sawtooth', 0.15), 100);
+    },
+    finish: () => {
+        const notes = [523, 659, 784, 1047, 1319];
+        notes.forEach((n, i) => setTimeout(() => beep(n, 0.22, 'square', 0.15), i * 120));
+    },
+    whoosh: () => {
+        if (!state.soundOn || !audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(200, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.2);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+        o.start(); o.stop(audioCtx.currentTime + 0.25);
+    }
+};
+
+/* ============================================================
+   LIVELY BACKGROUND MUSIC — Upbeat Chiptune Loop
+   ------------------------------------------------------------
+   Structure (all played every 16th note = 130ms):
+   - Bassline: root notes bouncing on a I-vi-IV-V chord progression
+   - Melody: cheerful arpeggio running over the bass
+   - Hi-hat: rhythmic tick on offbeats
+   ============================================================ */
+function startBackgroundMusic() {
+    if (!state.soundOn || !audioCtx || musicPlaying) return;
+    musicPlaying = true;
+
+    musicGain = audioCtx.createGain();
+    musicGain.gain.value = 0.055;   // Soft enough to not overpower SFX
+    musicGain.connect(audioCtx.destination);
+
+    // I - vi - IV - V progression in C major (bass root + melody arpeggio)
+    // Each chord lasts 8 beats (16 sixteenth notes), so ~2.08 s per chord
+    const progression = [
+        { bass: 130.81, arp: [261.63, 329.63, 392.00, 523.25] },  // C major
+        { bass: 110.00, arp: [220.00, 261.63, 329.63, 440.00] },  // A minor
+        { bass: 87.31,  arp: [174.61, 220.00, 261.63, 349.23] },  // F major
+        { bass: 98.00,  arp: [196.00, 246.94, 293.66, 392.00] }   // G major
+    ];
+
+    const STEP_MS = 130;              // 16th-note grid speed
+    const STEPS_PER_CHORD = 16;
+    let step = 0;
+    let chordIdx = 0;
+
+    // Play a single note with custom envelope
+    function playNote(freq, durSec, type, vol, attack) {
+        if (!audioCtx || !musicGain) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(musicGain);
+        o.type = type;
+        o.frequency.value = freq;
+        const now = audioCtx.currentTime;
+        const a = attack || 0.01;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(vol, now + a);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + durSec);
+        o.start(now); o.stop(now + durSec + 0.05);
+    }
+
+    // Percussion-like noise burst for hi-hat
+    function playHat(vol) {
+        if (!audioCtx || !musicGain) return;
+        const bufSize = audioCtx.sampleRate * 0.05;
+        const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        const g = audioCtx.createGain();
+        g.gain.value = vol;
+        const hp = audioCtx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = 7000;
+        src.connect(hp); hp.connect(g); g.connect(musicGain);
+        src.start();
+    }
+
+    function tick() {
+        if (!musicPlaying || !state.soundOn) return;
+
+        const chord = progression[chordIdx];
+        const s = step % STEPS_PER_CHORD;
+
+        // ---- Bassline: bouncing 8th notes (every 2 steps) ----
+        if (s % 2 === 0) {
+            const bassNote = (s % 4 === 0) ? chord.bass : chord.bass * 2;  // octave bounce
+            playNote(bassNote, 0.16, 'square', 0.35, 0.005);
+        }
+
+        // ---- Melody: cheerful arpeggio on 16ths ----
+        // Play a note on every step, cycling through the 4-note arpeggio
+        // Skip a couple to create rhythm (play on steps 0,1,2,3,4,6,8,10,12,14)
+        const playMelody = [0, 1, 2, 3, 4, 6, 8, 10, 12, 14].includes(s);
+        if (playMelody) {
+            const noteIdx = s % 4;
+            const freq = chord.arp[noteIdx];
+            // Add sparkle to the first note of each chord
+            const vol = (s === 0) ? 0.28 : 0.18;
+            playNote(freq, 0.11, 'triangle', vol, 0.005);
+        }
+
+        // ---- Extra accent note on the downbeat of beat 3 ----
+        if (s === 8) {
+            playNote(chord.arp[3] * 2, 0.14, 'triangle', 0.22, 0.005);
+        }
+
+        // ---- Hi-hat on the offbeat (every 2 steps starting at 1) ----
+        if (s % 2 === 1) {
+            playHat(0.08);
+        }
+        // Stronger kick-like hat on beats 0, 4, 8, 12
+        if (s % 4 === 0) {
+            playHat(0.12);
+        }
+
+        step++;
+        if (step % STEPS_PER_CHORD === 0) {
+            chordIdx = (chordIdx + 1) % progression.length;
+        }
+    }
+
+    tick();
+    musicLoop = setInterval(tick, STEP_MS);
+}
+
+function stopBackgroundMusic() {
+    musicPlaying = false;
+    if (musicLoop) { clearInterval(musicLoop); musicLoop = null; }
+    if (musicGain) {
+        try {
+            musicGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+            setTimeout(() => { try { musicGain.disconnect(); } catch (e) {} }, 300);
+        } catch (e) {}
+        musicGain = null;
+    }
+}
+
+/* ============================================================
+   GAME FLOW
+   ============================================================ */
+function showScreen(screen) {
+    [D.startScreen, D.tpsScreen, D.playScreen, D.resultsScreen].forEach(s => s.classList.remove('active'));
+    screen.classList.add('active');
+}
+
+function goToTPS() {
+    initAudio();
+    sfx.whoosh();
+    showScreen(D.tpsScreen);
+}
+
+function startGame() {
+    initAudio();
+    sfx.whoosh();
+    state = { idx: 0, score: 0, answered: false, mistakes: [], soundOn: state.soundOn };
+    D.hudScore.textContent = 0;
+    D.reviewBox.style.display = 'none';
+    showScreen(D.playScreen);
+    startBackgroundMusic();
+    updateSoundToggleUI();
+    loadOrganelle();
+}
+
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function loadOrganelle() {
+    if (state.idx >= organelles.length) return endGame();
+    state.answered = false;
+    const org = organelles[state.idx];
+
+    D.sceneTag.textContent = `Organelle #${state.idx + 1}`;
+    D.sceneTitle.textContent = `${org.emoji}  ${org.name}`;
+    D.sceneDesc.textContent = org.desc;
+    D.hudQ.textContent = state.idx + 1;
+    D.prog.style.width = `${(state.idx / organelles.length) * 100}%`;
+    D.feedback.className = 'feedback';
+    D.nextBtn.classList.remove('show');
+
+    const allOptions = shuffleArray([
+        { text: org.correctJob, correct: true },
+        ...org.decoys.map(d => ({ text: d, correct: false }))
+    ]);
+
+    D.options.innerHTML = '';
+    allOptions.forEach((opt, i) => {
+        const el = document.createElement('div');
+        el.className = 'option';
+        el.innerHTML = `<span class="opt-marker">${String.fromCharCode(65 + i)}</span><span class="opt-text">${opt.text}</span>`;
+        el.addEventListener('click', () => answer(el, opt.correct, org));
+        D.options.appendChild(el);
+    });
+}
+
+function answer(el, isCorrect, org) {
+    if (state.answered) return;
+    state.answered = true;
+
+    const allOpts = document.querySelectorAll('.option');
+    allOpts.forEach(o => o.disabled = true);
+
+    if (isCorrect) {
+        el.classList.add('correct');
+        sfx.correct();
+        state.score++;
+        D.hudScore.textContent = state.score;
+        D.feedback.className = 'feedback show ok';
+        D.feedback.innerHTML = `
+            <div class="label">✅ Correct!</div>
+            <strong>${org.name}</strong> — ${org.explain}
+        `;
+    } else {
+        el.classList.add('wrong');
+        sfx.wrong();
+        state.mistakes.push(org.name);
+        allOpts.forEach(o => {
+            const text = o.querySelector('.opt-text').textContent;
+            if (text === org.correctJob) o.classList.add('correct');
+        });
+        D.feedback.className = 'feedback show bad';
+        D.feedback.innerHTML = `
+            <div class="label">❌ Not quite.</div>
+            The correct job for <strong>${org.name}</strong>: <em>${org.correctJob}</em>.<br><br>
+            ${org.explain}
+        `;
+    }
+
+    D.nextBtn.classList.add('show');
+    D.nextBtn.textContent = state.idx < organelles.length - 1 ? 'Next Organelle →' : 'See Results →';
+}
+
+D.nextBtn.addEventListener('click', () => {
+    sfx.click();
+    state.idx++;
+    if (state.idx >= organelles.length) endGame();
+    else loadOrganelle();
+});
+
+function endGame() {
+    stopBackgroundMusic();
+    sfx.finish();
+    showScreen(D.resultsScreen);
+    D.prog.style.width = '100%';
+
+    const total = organelles.length;
+    D.finalScore.innerHTML = `${state.score}<span>/${total}</span>`;
+
+    const pct = state.score / total;
+    let badge, title, msg;
+
+    if (pct === 1) {
+        badge = '🏆';
+        title = 'Cell Master!';
+        msg = 'Perfect score! You know every organelle and its job. You could teach this lesson yourself!';
+    } else if (pct >= 0.75) {
+        badge = '⭐';
+        title = 'Cell Expert';
+        msg = 'Excellent work! You have a strong understanding of how organelles work. Review any you missed below.';
+    } else if (pct >= 0.5) {
+        badge = '🔬';
+        title = 'Rising Biologist';
+        msg = 'Good effort! You are building a solid understanding of cell structures. Keep exploring!';
+    } else {
+        badge = '📖';
+        title = 'Curious Explorer';
+        msg = 'Great start! Cells are complex — review the organelles below and try again. You will get there!';
+    }
+
+    D.levelBadge.textContent = badge;
+    D.levelTitle.textContent = title;
+    D.resultsMsg.textContent = msg;
+
+    if (state.mistakes.length > 0) {
+        D.reviewBox.style.display = 'block';
+        const uniq = [...new Set(state.mistakes)];
+        D.reviewList.innerHTML = uniq.map(m => `<li><strong>${m}</strong> — review its structure and function</li>`).join('');
+    } else {
+        D.reviewBox.style.display = 'none';
+    }
+    updateSoundToggleUI();
+}
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+function updateSoundToggleUI() {
+    D.soundToggle.textContent = state.soundOn ? '🔊' : '🔇';
+    if (state.soundOn && D.playScreen.classList.contains('active')) {
+        D.soundToggle.classList.add('playing');
+    } else {
+        D.soundToggle.classList.remove('playing');
+    }
+}
+
+/* ============================================================
+   EVENT LISTENERS
+   ============================================================ */
+D.toTpsBtn.addEventListener('click', goToTPS);
+D.skipToGameBtn.addEventListener('click', () => { initAudio(); sfx.click(); startGame(); });
+D.startGameBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+D.restartBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+
+document.querySelectorAll('.tps-step').forEach(step => {
+    step.addEventListener('click', () => {
+        sfx.select();
+        step.classList.toggle('active');
+    });
+});
+
+D.soundToggle.addEventListener('click', () => {
+    initAudio();
+    state.soundOn = !state.soundOn;
+    updateSoundToggleUI();
+    if (state.soundOn) {
+        sfx.click();
+        if (D.playScreen.classList.contains('active')) startBackgroundMusic();
+    } else {
+        stopBackgroundMusic();
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (!D.playScreen.classList.contains('active') || state.answered) return;
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 4) {
+        const opts = document.querySelectorAll('.option');
+        if (opts[num - 1] && !opts[num - 1].disabled) opts[num - 1].click();
+    }
+});
+
+/* ============================================================
+   DECORATIVE PARTICLES
+   ============================================================ */
+function createParticles() {
+    const colors = ['#8b5cf6', '#06b6d4', '#ec4899', '#fbbf24', '#10b981'];
+    for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 40 + 15;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (Math.random() * 25 + 20) + 's';
+        p.style.animationDelay = (Math.random() * 15) + 's';
+        D.particles.appendChild(p);
+    }
+}
+createParticles();
+
+document.addEventListener('click', function unlockAudio() {
+    initAudio();
+    document.removeEventListener('click', unlockAudio);
+}, { once: true });
+</script>
+</body>
+</html>
