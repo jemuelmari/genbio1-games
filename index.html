@@ -1,110 +1,776 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interactive Learning Games</title>
-<style>
-    :root {
-        --bg: #0f172a; --panel: #1e293b; --text: #f8fafc;
-        --muted: #94a3b8; --accent: #3b82f6;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cell Explorer · Lesson 3: Organelles</title>
+  <!-- Font Awesome 6 (free) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-        background: var(--bg); color: var(--text);
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        min-height: 100vh; display: flex; flex-direction: column;
-        align-items: center; padding: 40px 20px;
-        background-image: radial-gradient(circle at 20% 10%, rgba(59,130,246,0.12), transparent 40%),
-                          radial-gradient(circle at 80% 80%, rgba(139,92,246,0.12), transparent 40%);
-    }
-    header { text-align: center; margin-bottom: 40px; }
-    header h1 {
-        font-size: 2.5rem;
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        background-clip: text; margin-bottom: 10px;
-    }
-    header p { color: var(--muted); font-size: 1.1rem; }
-
-    .section-title {
-        width: 100%; max-width: 1000px;
-        font-size: 0.9rem; text-transform: uppercase;
-        letter-spacing: 3px; color: var(--muted);
-        font-weight: bold; margin: 30px 0 15px 0;
-        display: flex; align-items: center; gap: 12px;
-    }
-    .section-title::before, .section-title::after {
-        content: ''; flex: 1; height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #f5f9ff 0%, #e9f0fa 100%);
+      color: #1a2b3c;
+      padding: 2rem 1.5rem;
+      line-height: 1.5;
     }
 
-    .games-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px; width: 100%; max-width: 1000px;
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
     }
-    .game-card {
-        background: var(--panel); border-radius: 16px;
-        padding: 22px; text-decoration: none; color: var(--text);
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 1px solid rgba(255,255,255,0.05);
-        display: flex; flex-direction: column; gap: 10px;
-        position: relative; overflow: hidden;
-    }
-    .game-card::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0;
-        height: 4px; background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-    }
-    .game-card.mystery::before { background: linear-gradient(90deg, #fbbf24, #ef4444); }
-    .game-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(59,130,246,0.25); }
-    .game-card .icon { font-size: 2.5rem; }
-    .game-card h2 { font-size: 1.15rem; color: var(--text); line-height: 1.3; }
-    .game-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
-    .game-card .tag {
-        display: inline-block; background: rgba(59,130,246,0.2);
-        color: #93c5fd; padding: 4px 12px; border-radius: 20px;
-        font-size: 0.7rem; font-weight: bold;
-        text-transform: uppercase; letter-spacing: 1px;
-        width: fit-content; margin-top: auto;
-    }
-    .game-card.mystery .tag { background: rgba(251,191,36,0.2); color: #fde68a; }
 
-    footer { margin-top: 60px; color: var(--muted); font-size: 0.9rem; }
-</style>
+    /* header */
+    .lesson-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      background: white;
+      padding: 1.5rem 2rem;
+      border-radius: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 20, 40, 0.08);
+      border: 1px solid #d0e0f0;
+    }
+
+    .header-title h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #0b4b6b, #1e7a9c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.2rem;
+    }
+
+    .header-title p {
+      font-size: 0.95rem;
+      color: #4a6075;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-title i {
+      color: #1e7a9c;
+    }
+
+    .badge {
+      background: #d9ecff;
+      color: #0b4b6b;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      display: inline-block;
+      letter-spacing: 0.3px;
+    }
+
+    .objectives-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.6rem;
+    }
+
+    .obj-item {
+      background: #f0f7ff;
+      border-radius: 2rem;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1b4e6b;
+      border: 1px solid #c2d9ee;
+    }
+
+    /* category chips */
+    .category-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 2rem 0 1.5rem;
+    }
+
+    .category-chip {
+      flex: 1 1 150px;
+      background: white;
+      border-radius: 2rem;
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+      border: 1px solid #d0e2f2;
+      transition: all 0.15s;
+    }
+
+    .category-chip i {
+      font-size: 1.5rem;
+      width: 2rem;
+      text-align: center;
+    }
+
+    .category-chip .cat-text {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .category-chip .cat-sub {
+      font-size: 0.75rem;
+      color: #58748c;
+      font-weight: 400;
+    }
+
+    .energy { border-left: 6px solid #e63946; }
+    .transport { border-left: 6px solid #1e7a9c; }
+    .synthesis { border-left: 6px solid #2a9d8f; }
+    .storage { border-left: 6px solid #e9b949; }
+
+    /* main layout: chart + diagram */
+    .lesson-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr;
+      gap: 1.8rem;
+      margin: 2rem 0;
+    }
+
+    @media (max-width: 900px) {
+      .lesson-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.8rem 1.8rem 2rem;
+      box-shadow: 0 15px 30px rgba(0, 20, 30, 0.06);
+      border: 1px solid #d8e5f0;
+    }
+
+    .card h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+      color: #11394f;
+      border-bottom: 2px dashed #cbdbe9;
+      padding-bottom: 0.8rem;
+    }
+
+    .card h2 i {
+      color: #1e7a9c;
+    }
+
+    /* organelle table */
+    .organelle-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .organelle-table th {
+      text-align: left;
+      font-weight: 600;
+      background: #e7f1fa;
+      color: #11394f;
+      padding: 0.7rem 0.5rem;
+      border-radius: 1rem 1rem 0 0;
+      font-size: 0.8rem;
+      letter-spacing: 0.3px;
+    }
+
+    .organelle-table td {
+      padding: 0.7rem 0.5rem;
+      border-bottom: 1px solid #e3eef8;
+      vertical-align: top;
+    }
+
+    .organelle-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .organelle-table i {
+      margin-right: 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    .cat-badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #eef4fa;
+      color: #1e5a7a;
+    }
+
+    .plant-animal {
+      font-size: 0.7rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .both { color: #2a6b4b; }
+    .plant-only { color: #1e7a3c; background: #e1f3e6; padding: 0.1rem 0.4rem; border-radius: 12px; }
+    .animal-only { color: #9b4b1e; background: #fdeee3; padding: 0.1rem 0.4rem; border-radius: 12px; }
+
+    /* diagram area */
+    .diagram-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .cell-diagram {
+      background: #fafdff;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      border: 2px dashed #b8d2e8;
+    }
+
+    .cell-diagram h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      color: #1e5a7a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .diagram-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem 1rem;
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+    }
+
+    /* station cards */
+    .stations-section {
+      margin: 2.5rem 0 1.5rem;
+    }
+
+    .stations-section h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+      color: #11394f;
+    }
+
+    .station-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem;
+    }
+
+    .station-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.02);
+      border: 1px solid #d8e5f0;
+      transition: 0.1s;
+    }
+
+    .station-card:hover {
+      border-color: #aac7e0;
+      box-shadow: 0 8px 18px rgba(30, 122, 156, 0.08);
+    }
+
+    .station-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #1e7a9c;
+      background: #e3f0fc;
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 0.6rem;
+    }
+
+    .station-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .station-card p {
+      font-size: 0.75rem;
+      color: #3d5568;
+      margin-bottom: 0.5rem;
+    }
+
+    .station-q {
+      font-size: 0.7rem;
+      color: #0b4b6b;
+      background: #e9f2fa;
+      padding: 0.3rem 0.6rem;
+      border-radius: 30px;
+      display: inline-block;
+      font-weight: 500;
+    }
+
+    .fun-fact {
+      font-size: 0.7rem;
+      color: #6b4e1e;
+      background: #fff8e7;
+      padding: 0.3rem 0.6rem;
+      border-radius: 30px;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+
+    /* exit ticket */
+    .exit-ticket {
+      background: linear-gradient(120deg, #ffffff, #f5fbff);
+      border-radius: 2rem;
+      padding: 1.8rem 2rem;
+      margin: 2rem 0 1rem;
+      border: 2px solid #cfe2f5;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .exit-ticket h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #0b4b6b;
+    }
+
+    .exit-input {
+      flex: 1 1 300px;
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .exit-input input {
+      flex: 1;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      border: 1px solid #b8d0e5;
+      font-size: 0.9rem;
+      background: white;
+      outline: none;
+      transition: 0.15s;
+    }
+
+    .exit-input input:focus {
+      border-color: #1e7a9c;
+      box-shadow: 0 0 0 3px rgba(30, 122, 156, 0.1);
+    }
+
+    .exit-input button {
+      background: #1e7a9c;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0 1.8rem;
+      border-radius: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+
+    .exit-input button:hover {
+      background: #0e5a78;
+    }
+
+    /* reflection note */
+    .reflection {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #3d5568;
+      background: #e3eef8;
+      border-radius: 1.5rem;
+      padding: 1.2rem 1.8rem;
+      margin-top: 1.8rem;
+    }
+
+    .reflection i {
+      color: #1e7a9c;
+      margin-right: 0.4rem;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 0.75rem;
+      color: #7b95ab;
+      border-top: 1px solid #cbdbe9;
+      padding-top: 1.5rem;
+    }
+
+    /* interactive label hover */
+    .hover-label {
+      cursor: default;
+      transition: 0.1s;
+    }
+
+    .hover-label:hover {
+      filter: brightness(0.95);
+    }
+  </style>
 </head>
 <body>
+<div class="container">
 
-<header>
-    <h1>Interactive Learning Games</h1>
-    <p>Engaging activities for the classroom</p>
-</header>
+  <!-- HEADER -->
+  <header class="lesson-header">
+    <div class="header-title">
+      <h1><i class="fas fa-microscope" style="background: none; -webkit-text-fill-color: #1e7a9c;"></i> Cell Explorer · Organelles</h1>
+      <p><i class="fas fa-flask"></i> Session 3 · STEM_BIO11/12-Ia-c-2</p>
+      <div class="objectives-grid">
+        <span class="obj-item"><i class="fas fa-brain"></i> Identify 8+ organelles</span>
+        <span class="obj-item"><i class="fas fa-ear-listen"></i> Listen during stations</span>
+        <span class="obj-item"><i class="fas fa-pen"></i> Label plant & animal cell</span>
+      </div>
+    </div>
+    <div class="badge">
+      <i class="fas fa-clock"></i> 40 minutes · Stations
+    </div>
+  </header>
 
-<div class="section-title">🔬 General Biology 1 — Cell Biology</div>
+  <!-- CATEGORY CHIPS -->
+  <div class="category-strip">
+    <div class="category-chip energy">
+      <i class="fas fa-bolt" style="color:#e63946;"></i>
+      <div>
+        <div class="cat-text">⚡ Energy</div>
+        <div class="cat-sub">Mitochondria · Chloroplasts</div>
+      </div>
+    </div>
+    <div class="category-chip transport">
+      <i class="fas fa-truck" style="color:#1e7a9c;"></i>
+      <div>
+        <div class="cat-text">🚚 Transport</div>
+        <div class="cat-sub">ER · Golgi · Membrane</div>
+      </div>
+    </div>
+    <div class="category-chip synthesis">
+      <i class="fas fa-industry" style="color:#2a9d8f;"></i>
+      <div>
+        <div class="cat-text">🏭 Synthesis</div>
+        <div class="cat-sub">Nucleus · Ribosomes</div>
+      </div>
+    </div>
+    <div class="category-chip storage">
+      <i class="fas fa-box" style="color:#e9b949;"></i>
+      <div>
+        <div class="cat-text">📦 Storage</div>
+        <div class="cat-sub">Vacuoles · Lysosomes</div>
+      </div>
+    </div>
+  </div>
 
-<div class="games-grid">
+  <!-- MAIN GRID: TABLE + DIAGRAM -->
+  <div class="lesson-grid">
+    <!-- ORGANELLE CHART CARD -->
+    <div class="card">
+      <h2><i class="fas fa-table"></i> Organelle Chart (complete during stations)</h2>
+      <table class="organelle-table">
+        <thead>
+          <tr>
+            <th>Organelle</th>
+            <th>Structure</th>
+            <th>Function</th>
+            <th>Category</th>
+            <th>Present in</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><i class="fas fa-circle" style="color:#4a6fa5;"></i> Nucleus</td>
+            <td>Large, membrane-bound; contains DNA</td>
+            <td>Controls cell activities; stores genetic info</td>
+            <td><span class="cat-badge">Synthesis</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-bolt" style="color:#e63946;"></i> Mitochondria</td>
+            <td>Oval, double membrane; cristae folds</td>
+            <td>Produces ATP energy (respiration)</td>
+            <td><span class="cat-badge">Energy</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-dot-circle" style="color:#2a9d8f;"></i> Ribosomes</td>
+            <td>Tiny dots; free or on ER</td>
+            <td>Makes proteins</td>
+            <td><span class="cat-badge">Synthesis</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-project-diagram" style="color:#5a7ea0;"></i> Rough ER</td>
+            <td>Network of tubes + ribosomes</td>
+            <td>Transports proteins; protein synthesis</td>
+            <td><span class="cat-badge">Transport</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-project-diagram" style="color:#7f9bb3;"></i> Smooth ER</td>
+            <td>Network of tubes, no ribosomes</td>
+            <td>Makes lipids; detoxifies</td>
+            <td><span class="cat-badge">Transport</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-layer-group" style="color:#1e7a9c;"></i> Golgi Apparatus</td>
+            <td>Stack of flattened sacs</td>
+            <td>Modifies, sorts, packages proteins</td>
+            <td><span class="cat-badge">Transport</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-trash-alt" style="color:#b85c1e;"></i> Lysosomes</td>
+            <td>Small sacs with enzymes</td>
+            <td>Breaks down waste and old cell parts</td>
+            <td><span class="cat-badge">Storage</span></td>
+            <td><span class="plant-animal animal-only">Animal (rare in plants)</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-database" style="color:#e9b949;"></i> Vacuoles</td>
+            <td>Large sac (plants); small (animals)</td>
+            <td>Stores water, nutrients, waste</td>
+            <td><span class="cat-badge">Storage</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-sun" style="color:#2a9d8f;"></i> Chloroplasts</td>
+            <td>Oval, green; contains chlorophyll</td>
+            <td>Captures light energy (photosynthesis)</td>
+            <td><span class="cat-badge">Energy</span></td>
+            <td><span class="plant-animal plant-only">Plant only</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-border-all" style="color:#5b8c5a;"></i> Cell Membrane</td>
+            <td>Thin, flexible layer around cell</td>
+            <td>Controls what enters/exits the cell</td>
+            <td><span class="cat-badge">Transport</span></td>
+            <td><span class="plant-animal both">Plant &amp; Animal</span></td>
+          </tr>
+          <tr>
+            <td><i class="fas fa-cube" style="color:#8b6b4b;"></i> Cell Wall</td>
+            <td>Rigid outer layer</td>
+            <td>Provides support and protection</td>
+            <td><span class="cat-badge">Support</span></td>
+            <td><span class="plant-animal plant-only">Plant only</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.7rem; color:#7b95ab; margin-top:1rem;"><i class="fas fa-check-circle" style="color:#1e7a9c;"></i> Full chart with 8+ organelles — complete during station rotation.</p>
+    </div>
 
-    <!-- GAME 1: CELL THEORY QUEST -->
-    <a href="games/cell-theory-quest.html" class="game-card">
-        <div class="icon">🔬</div>
-        <h2>Cell Theory Quest</h2>
-        <p>Journey through the history of cell discovery — from Hooke to Virchow — and master the three principles of Cell Theory.</p>
-        <span class="tag">Cell Theory</span>
-    </a>
+    <!-- DIAGRAM CARD -->
+    <div class="card diagram-container">
+      <h2><i class="fas fa-draw-polygon"></i> Label the Cells (use colors)</h2>
+      <!-- PLANT CELL SVG -->
+      <div class="cell-diagram">
+        <h3><i class="fas fa-seedling" style="color:#2a9d8f;"></i> Plant Cell</h3>
+        <svg viewBox="0 0 300 180" class="diagram-svg" xmlns="http://www.w3.org/2000/svg">
+          <!-- cell wall -->
+          <rect x="10" y="10" width="280" height="160" rx="20" fill="#e1f3e6" stroke="#3d7a4b" stroke-width="5" />
+          <!-- cell membrane -->
+          <rect x="22" y="22" width="256" height="136" rx="16" fill="#d4eaf7" stroke="#3b7a9e" stroke-width="2.5" />
+          <!-- vacuole -->
+          <ellipse cx="170" cy="90" rx="55" ry="45" fill="#b8ddf0" stroke="#2e7a9c" stroke-width="2" opacity="0.8" />
+          <text x="140" y="95" font-size="8" fill="#0b4b6b" font-weight="600">Vacuole</text>
+          <!-- nucleus -->
+          <circle cx="80" cy="70" r="30" fill="#c2d6f0" stroke="#2e5a8a" stroke-width="2.5" />
+          <circle cx="80" cy="70" r="12" fill="#9bb8e0" stroke="#1e3a6a" stroke-width="1.5" />
+          <text x="58" y="75" font-size="8" fill="#0b2b4a" font-weight="600">Nucleus</text>
+          <!-- mitochondria -->
+          <ellipse cx="220" cy="40" rx="18" ry="10" fill="#f5c6cb" stroke="#b83b4b" stroke-width="2" />
+          <text x="200" y="44" font-size="7" fill="#7a1e2b" font-weight="600">Mito</text>
+          <!-- chloroplast -->
+          <ellipse cx="60" cy="130" rx="18" ry="10" fill="#a8d8b0" stroke="#2e7a4b" stroke-width="2" />
+          <text x="42" y="134" font-size="7" fill="#1b5a2b" font-weight="600">Chloro</text>
+          <!-- golgi -->
+          <path d="M200 130 Q210 120 220 130 Q230 140 240 130" stroke="#7a5ca8" stroke-width="4" fill="none" />
+          <text x="195" y="150" font-size="7" fill="#4a2e6a" font-weight="600">Golgi</text>
+          <!-- label lines -->
+          <text x="10" y="170" font-size="8" fill="#2a5a7a" font-weight="500">Cell wall</text>
+          <text x="240" y="170" font-size="8" fill="#2a5a7a" font-weight="500">Membrane</text>
+        </svg>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-color" style="background:#a8d8b0;"></span> Chloroplast (energy)</span>
+          <span class="legend-item"><span class="legend-color" style="background:#f5c6cb;"></span> Mitochondria (energy)</span>
+          <span class="legend-item"><span class="legend-color" style="background:#c2d6f0;"></span> Nucleus (synthesis)</span>
+          <span class="legend-item"><span class="legend-color" style="background:#b8ddf0;"></span> Vacuole (storage)</span>
+        </div>
+      </div>
+      <!-- ANIMAL CELL SVG -->
+      <div class="cell-diagram">
+        <h3><i class="fas fa-paw" style="color:#b85c1e;"></i> Animal Cell</h3>
+        <svg viewBox="0 0 300 180" class="diagram-svg" xmlns="http://www.w3.org/2000/svg">
+          <!-- cell membrane -->
+          <ellipse cx="150" cy="90" rx="130" ry="75" fill="#f0f6fe" stroke="#3b7a9e" stroke-width="3.5" />
+          <!-- nucleus -->
+          <circle cx="110" cy="80" r="32" fill="#c2d6f0" stroke="#2e5a8a" stroke-width="2.5" />
+          <circle cx="110" cy="80" r="14" fill="#9bb8e0" stroke="#1e3a6a" stroke-width="1.5" />
+          <text x="88" y="85" font-size="8" fill="#0b2b4a" font-weight="600">Nucleus</text>
+          <!-- mitochondria -->
+          <ellipse cx="210" cy="50" rx="18" ry="10" fill="#f5c6cb" stroke="#b83b4b" stroke-width="2" />
+          <text x="192" y="54" font-size="7" fill="#7a1e2b" font-weight="600">Mito</text>
+          <!-- lysosome -->
+          <circle cx="70" cy="130" r="12" fill="#f7d9b0" stroke="#b87c2e" stroke-width="2" />
+          <text x="48" y="146" font-size="7" fill="#7a4e1e" font-weight="600">Lysosome</text>
+          <!-- golgi -->
+          <path d="M180 110 Q190 100 200 110 Q210 120 220 110" stroke="#7a5ca8" stroke-width="4" fill="none" />
+          <text x="175" y="130" font-size="7" fill="#4a2e6a" font-weight="600">Golgi</text>
+          <!-- ribosomes small dots -->
+          <circle cx="160" cy="140" r="3" fill="#2a9d8f" />
+          <circle cx="170" cy="145" r="3" fill="#2a9d8f" />
+          <circle cx="150" cy="150" r="3" fill="#2a9d8f" />
+          <text x="130" y="165" font-size="7" fill="#1a6b5a" font-weight="600">Ribosomes</text>
+        </svg>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-color" style="background:#f5c6cb;"></span> Mitochondria (energy)</span>
+          <span class="legend-item"><span class="legend-color" style="background:#f7d9b0;"></span> Lysosome (recycling)</span>
+          <span class="legend-item"><span class="legend-color" style="background:#c2d6f0;"></span> Nucleus (synthesis)</span>
+          <span class="legend-item"><span class="legend-color" style="background:#2a9d8f;"></span> Ribosomes (synthesis)</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- GAME 2: MYSTERY BOX DETECTIVE -->
-    <a href="games/mystery-box-detective.html" class="game-card mystery">
-        <div class="icon">📦</div>
-        <h2>Mystery Box Detective</h2>
-        <p>Read clues and identify the hidden cell structure or organelle. Become a biology detective!</p>
-        <span class="tag">Cell Structures</span>
-    </a>
+  <!-- STATIONS ROTATION -->
+  <section class="stations-section">
+    <h2><i class="fas fa-rotate"></i> Organelle Stations Rotation (6 stations)</h2>
+    <div class="station-grid">
+      <div class="station-card">
+        <div class="station-num">Station 1</div>
+        <h4>Nucleus &amp; Ribosomes</h4>
+        <p>Nucleus with pores; ribosomes as tiny dots.</p>
+        <span class="station-q"><i class="fas fa-question-circle"></i> Why does the nucleus have pores?</span>
+        <div class="fun-fact"><i class="fas fa-lightbulb"></i> DNA stretched = 2 meters!</div>
+      </div>
+      <div class="station-card">
+        <div class="station-num">Station 2</div>
+        <h4>Mitochondria &amp; Chloroplasts</h4>
+        <p>Cristae folds; thylakoids and grana.</p>
+        <span class="station-q"><i class="fas fa-question-circle"></i> Why do muscle cells have more mitochondria?</span>
+        <div class="fun-fact"><i class="fas fa-dna"></i> Mitochondria have their own DNA!</div>
+      </div>
+      <div class="station-card">
+        <div class="station-num">Station 3</div>
+        <h4>Rough &amp; Smooth ER</h4>
+        <p>Rough ER with ribosomes; smooth ER without.</p>
+        <span class="station-q"><i class="fas fa-question-circle"></i> Why is rough ER "rough"?</span>
+        <div class="fun-fact"><i class="fas fa-flask"></i> Liver cells have lots of smooth ER.</div>
+      </div>
+      <div class="station-card">
+        <div class="station-num">Station 4</div>
+        <h4>Golgi &amp; Vesicles</h4>
+        <p>Stacked sacs; vesicles budding off.</p>
+        <span class="station-q"><i class="fas fa-question-circle"></i> How is the Golgi like a post office?</span>
+        <div class="fun-fact"><i class="fas fa-history"></i> Discovered by Camillo Golgi in 1898.</div>
+      </div>
+      <div class="station-card">
+        <div class="station-num">Station 5</div>
+        <h4>Lysosomes &amp; Vacuoles</h4>
+        <p>Enzyme sacs; large central vacuole in plants.</p>
+        <span class="station-q"><i class="fas fa-question-circle"></i> Why do plant cells have a large vacuole?</span>
+        <div class="fun-fact"><i class="fas fa-skull"></i> Lysosomes = "suicide sacs"</div>
+      </div>
+      <div class="station-card">
+        <div class="station-num">Station 6</div>
+        <h4>Cell Membrane &amp; Wall</h4>
+        <p>Phospholipid bilayer; rigid cell wall.</p>
+        <span class="station-q"><i class="fas fa-question-circle"></i> Why is the membrane "selectively permeable"?</span>
+        <div class="fun-fact"><i class="fas fa-layer-group"></i> 10,000 membranes = paper thickness.</div>
+      </div>
+    </div>
+  </section>
 
+  <!-- EXIT TICKET -->
+  <div class="exit-ticket">
+    <h3><i class="fas fa-ticket-alt"></i> Exit Ticket: Which organelle surprised you most &amp; why?</h3>
+    <div class="exit-input">
+      <input type="text" id="exitInput" placeholder="e.g., Mitochondria — they have their own DNA!">
+      <button onclick="submitExit()"><i class="fas fa-paper-plane"></i> Submit</button>
+    </div>
+    <p id="exitFeedback" style="font-size:0.8rem; color:#1e7a9c; margin-top:0.5rem; width:100%;"></p>
+  </div>
+
+  <!-- REFLECTION / TEACHER NOTES -->
+  <div class="reflection">
+    <div><i class="fas fa-chalkboard-teacher"></i> <strong>Common confusions:</strong> Rough vs smooth ER · Golgi vs ER · Lysosome vs vacuole · Mitochondria vs chloroplast</div>
+    <div><i class="fas fa-palette"></i> <strong>Visual glossary:</strong> Prepare for next session</div>
+    <div><i class="fas fa-book"></i> Reece et al. (2011) <em>Campbell Biology</em> (9th ed.)</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-note">
+    <i class="fas fa-city"></i> The cell is a microscopic city — structure determines function!
+  </div>
 </div>
 
-<footer>
-    &copy; 2024 Interactive Learning Games
-</footer>
+<!-- simple script for exit ticket -->
+<script>
+  function submitExit() {
+    const input = document.getElementById('exitInput');
+    const feedback = document.getElementById('exitFeedback');
+    if (input.value.trim() === '') {
+      feedback.textContent = '✏️ Please type a short response before submitting.';
+      feedback.style.color = '#b85c1e';
+    } else {
+      feedback.textContent = '✅ Thank you! Your exit ticket has been recorded (demo).';
+      feedback.style.color = '#1e7a9c';
+      input.value = '';
+    }
+  }
+</script>
 
 </body>
 </html>
