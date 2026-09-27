@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organelle Stations Rotation</title>
+<style>
+    :root {
+        --bg: #0a0e1a; --panel: #151b2b; --card: #1e2640;
+        --text: #e2e8f0; --muted: #94a3b8;
+        --green: #10b981; --red: #ef4444; --blue: #3b82f6;
+        --purple: #8b5cf6; --gold: #fbbf24; --pink: #ec4899;
+        --cyan: #06b6d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+        background: var(--bg); color: var(--text);
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh; display: flex; flex-direction: column;
+        align-items: center; padding: 20px;
+        background-image: radial-gradient(circle at 20% 20%, rgba(139,92,246,0.15), transparent 50%),
+                          radial-gradient(circle at 80% 80%, rgba(6,182,212,0.12), transparent 50%);
+        overflow-x: hidden;
+    }
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .particle { position: absolute; border-radius: 50%; opacity: 0.15; animation: float-up linear infinite; }
+    @keyframes float-up {
+        from { transform: translateY(100vh) scale(0.5); opacity: 0; }
+        10% { opacity: 0.15; }
+        90% { opacity: 0.15; }
+        to { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+    }
+
+    header {
+        width: 100%; max-width: 1050px;
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 20px;
+        position: relative; z-index: 2;
+    }
+    .back-btn {
+        background: var(--panel); color: var(--muted);
+        text-decoration: none; padding: 10px 18px;
+        border-radius: 10px; font-weight: bold;
+        border: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.9rem; transition: 0.2s;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .back-btn:hover { color: white; background: #2a3450; transform: translateX(-3px); }
+
+    .hud { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .hud-box {
+        background: var(--panel); padding: 10px 16px;
+        border-radius: 10px; font-weight: bold; font-size: 0.85rem;
+        border-bottom: 3px solid var(--purple);
+        color: white;
+    }
+    .hud-box span { color: var(--gold); }
+
+    .sound-toggle {
+        background: var(--panel); border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted); width: 40px; height: 40px;
+        border-radius: 10px; cursor: pointer; font-size: 1.1rem;
+        transition: 0.2s; display: flex; align-items: center; justify-content: center;
+        position: relative;
+    }
+    .sound-toggle:hover { color: white; background: #2a3450; }
+    .sound-toggle.playing::after {
+        content: '';
+        position: absolute; inset: -3px;
+        border-radius: 12px;
+        border: 2px solid var(--cyan);
+        animation: pulse-ring 1.5s ease-out infinite;
+    }
+    @keyframes pulse-ring {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.3); opacity: 0; }
+    }
+
+    .game-wrap {
+        width: 100%; max-width: 1050px;
+        background: var(--panel); border-radius: 20px;
+        padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        border: 1px solid rgba(139,92,246,0.25);
+        position: relative; z-index: 2; overflow: hidden;
+    }
+    .progress-track {
+        width: 100%; height: 6px; background: rgba(255,255,255,0.08);
+        border-radius: 10px; margin-bottom: 25px; overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4, #ec4899);
+        transition: width 0.5s ease; border-radius: 10px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+    /* ========= START SCREEN ========= */
+    #start-screen { text-align: center; }
+    .icon-big {
+        font-size: 5rem; margin-bottom: 15px;
+        animation: bounce 2.5s ease-in-out infinite;
+        display: inline-block;
+    }
+    @keyframes bounce {
+        0%,100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+    #start-screen h1 {
+        font-size: 2.4rem; margin-bottom: 15px;
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4, #ec4899);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    #start-screen p {
+        color: var(--muted); font-size: 1.05rem;
+        line-height: 1.6; max-width: 700px; margin: 0 auto 20px;
+    }
+    .intro-box {
+        background: rgba(139,92,246,0.08);
+        border-left: 4px solid var(--purple);
+        padding: 18px 22px; border-radius: 10px;
+        margin: 20px auto; max-width: 700px; text-align: left;
+    }
+    .intro-box h3 {
+        color: #c4b5fd; font-size: 0.85rem;
+        text-transform: uppercase; letter-spacing: 2px;
+        margin-bottom: 10px;
+    }
+    .intro-box p { color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; }
+    .intro-box strong { color: white; }
+    .intro-box ul { list-style: none; padding: 0; margin: 8px 0 0 0; }
+    .intro-box ul li {
+        color: #cbd5e1; font-size: 0.9rem;
+        padding: 4px 0; padding-left: 22px; position: relative;
+    }
+    .intro-box ul li::before {
+        content: '▸'; position: absolute; left: 0;
+        color: var(--cyan); font-weight: bold;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        color: white; border: none; padding: 16px 45px;
+        border-radius: 50px; font-size: 1.05rem; font-weight: bold;
+        text-transform: uppercase; letter-spacing: 1px;
+        cursor: pointer; transition: 0.2s;
+        box-shadow: 0 0 25px rgba(139,92,246,0.5);
+        margin: 5px;
+    }
+    .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(139,92,246,0.8); }
+    .btn-secondary {
+        background: transparent; color: var(--muted);
+        border: 2px solid rgba(255,255,255,0.15);
+        padding: 14px 35px; border-radius: 50px;
+        font-size: 0.95rem; font-weight: bold;
+        cursor: pointer; transition: 0.2s; margin: 5px;
+        text-decoration: none; display: inline-block;
+    }
+    .btn-secondary:hover { color: white; border-color: #64748b; background: #334155; }
+
+    /* ========= STATION NAVIGATION BAR ========= */
+    .station-bar {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+    .station-dot {
+        background: var(--card);
+        border: 2px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: 0.25s;
+        font-weight: bold;
+        font-size: 0.9rem;
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
+    }
+    .station-dot:hover {
+        transform: translateY(-3px);
+        border-color: var(--purple);
+        color: white;
+    }
+    .station-dot.active {
+        background: rgba(139,92,246,0.25);
+        border-color: var(--purple);
+        color: white;
+        box-shadow: 0 0 15px rgba(139,92,246,0.5);
+    }
+    .station-dot.visited {
+        background: rgba(16,185,129,0.15);
+        border-color: var(--green);
+        color: #6ee7b7;
+    }
+    .station-dot.active.visited {
+        background: rgba(139,92,246,0.25);
+        border-color: var(--purple);
+        color: white;
+    }
+    .station-dot .check {
+        position: absolute; top: -6px; right: -6px;
+        background: var(--green); color: white;
+        width: 18px; height: 18px; border-radius: 50%;
+        font-size: 0.65rem;
+        display: flex; align-items: center; justify-content: center;
+        border: 2px solid var(--panel);
+    }
+
+    /* ========= STATION HEADER ========= */
+    .station-header {
+        text-align: center; margin-bottom: 22px;
+    }
+    .station-tag {
+        display: inline-block;
+        background: rgba(139,92,246,0.15); color: #c4b5fd;
+        padding: 6px 16px; border-radius: 20px;
+        font-size: 0.8rem; font-weight: bold;
+        text-transform: uppercase; letter-spacing: 2px;
+        margin-bottom: 12px;
+    }
+    .station-title {
+        font-size: 1.7rem; font-weight: 700;
+        margin-bottom: 10px; line-height: 1.3;
+    }
+    .station-subtitle {
+        color: var(--muted); font-size: 0.95rem;
+        max-width: 700px; margin: 0 auto;
+        line-height: 1.5;
+    }
+
+    /* ========= ORGANELLE CARDS ========= */
+    .organelle-grid {
+        display: grid; gap: 15px;
+        margin-bottom: 22px;
+    }
+    .organelle-grid.two { grid-template-columns: 1fr 1fr; }
+    .organelle-card {
+        background: var(--card); border-radius: 16px;
+        padding: 22px; border: 1px solid rgba(255,255,255,0.08);
+        transition: 0.25s;
+    }
+    .organelle-card:hover {
+        border-color: rgba(139,92,246,0.4);
+        transform: translateY(-3px);
+    }
+    .organelle-header {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 12px;
+    }
+    .organelle-emoji { font-size: 2rem; }
+    .organelle-name {
+        font-size: 1.15rem; font-weight: 700;
+        color: white;
+    }
+    .organelle-section {
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    .organelle-section:last-child { margin-bottom: 0; }
+    .organelle-label {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+    .label-structure { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .label-function { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .label-category { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+    .label-present { background: rgba(251,191,36,0.2); color: #fde68a; }
+    .organelle-section span.content { color: #cbd5e1; }
+
+    /* ========= KEY QUESTION BOX ========= */
+    .question-box {
+        background: rgba(251,191,36,0.08);
+        border-left: 4px solid var(--gold);
+        padding: 18px 22px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+    }
+    .question-label {
+        color: var(--gold);
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+    }
+    .question-text {
+        color: #fde68a;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+    .question-options {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 10px; margin-top: 14px;
+    }
+    .question-opt {
+        background: var(--card);
+        border: 2px solid rgba(255,255,255,0.1);
+        padding: 14px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 0.9rem;
+        color: var(--text);
+        text-align: left;
+        font-family: inherit;
+    }
+    .question-opt:hover:not(:disabled) {
+        border-color: var(--gold);
+        transform: translateY(-2px);
+    }
+    .question-opt:disabled { cursor: not-allowed; }
+    .question-opt.correct {
+        background: rgba(16,185,129,0.2);
+        border-color: var(--green);
+        color: white;
+    }
+    .question-opt.wrong {
+        background: rgba(239,68,68,0.15);
+        border-color: var(--red);
+    }
+    .question-opt:disabled:not(.correct):not(.wrong) { opacity: 0.4; }
+
+    /* ========= FUN FACT BOX ========= */
+    .fun-fact {
+        background: rgba(236,72,153,0.08);
+        border-left: 4px solid var(--pink);
+        padding: 16px 22px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+    .fun-fact-icon {
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+    .fun-fact-content {
+        flex: 1;
+    }
+    .fun-fact-label {
+        color: var(--pink);
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 6px;
+    }
+    .fun-fact-text {
+        color: #fbcfe8;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* ========= STRUCTURE-FUNCTION TIP ========= */
+    .sf-tip {
+        background: rgba(6,182,212,0.08);
+        border-left: 4px solid var(--cyan);
+        padding: 16px 22px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+    .sf-tip-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .sf-tip-content { flex: 1; }
+    .sf-tip-label {
+        color: var(--cyan);
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 6px;
+    }
+    .sf-tip-text {
+        color: #a5f3fc;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* ========= STATION NAV BUTTONS ========= */
+    .station-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    .nav-btn {
+        background: var(--card); color: white;
+        border: 2px solid rgba(255,255,255,0.15);
+        padding: 12px 24px; border-radius: 10px;
+        font-weight: bold; cursor: pointer;
+        font-size: 0.9rem; transition: 0.2s;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .nav-btn:hover:not(:disabled) {
+        border-color: var(--purple);
+        background: rgba(139,92,246,0.15);
+        transform: translateY(-2px);
+    }
+    .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .nav-btn.primary {
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        border: none;
+        box-shadow: 0 0 15px rgba(139,92,246,0.4);
+    }
+    .nav-btn.primary:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(139,92,246,0.7);
+    }
+
+    .station-progress {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: bold;
+        flex: 1;
+    }
+    .station-progress span { color: var(--gold); }
+
+    /* ========= RESULTS SCREEN ========= */
+    #results-screen { text-align: center; }
+    .level-badge {
+        font-size: 5rem; margin: 10px 0;
+        animation: bounce 2s ease-in-out infinite;
+    }
+    #results-screen h1 {
+        font-size: 2rem; margin-bottom: 15px;
+        background: linear-gradient(135deg, #10b981, #06b6d4);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .level-title {
+        font-size: 1.6rem; font-weight: bold;
+        color: var(--gold); margin-bottom: 10px;
+    }
+    .score-big {
+        font-size: 3rem; font-weight: 900;
+        margin: 15px 0; color: white;
+    }
+    .score-big span { font-size: 1.5rem; color: var(--muted); }
+    #results-msg {
+        color: var(--muted); font-size: 1rem;
+        line-height: 1.6; max-width: 700px; margin: 0 auto 20px;
+    }
+
+    .master-chart {
+        background: rgba(139,92,246,0.08);
+        border-radius: 14px;
+        padding: 22px;
+        margin: 20px auto;
+        max-width: 900px;
+        text-align: left;
+        overflow-x: auto;
+    }
+    .master-chart h3 {
+        color: #c4b5fd; font-size: 0.9rem;
+        text-transform: uppercase; letter-spacing: 2px;
+        margin-bottom: 15px; text-align: center;
+    }
+    .chart-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 700px;
+    }
+    .chart-table th {
+        background: rgba(139,92,246,0.2);
+        color: #c4b5fd;
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid rgba(139,92,246,0.3);
+    }
+    .chart-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        color: #cbd5e1;
+        vertical-align: top;
+    }
+    .chart-table tr:last-child td { border-bottom: none; }
+    .chart-table td:first-child { color: white; font-weight: 600; }
+    .cat-pill {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .cat-energy { background: rgba(251,191,36,0.2); color: #fde68a; }
+    .cat-transport { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .cat-synthesis { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .cat-storage { background: rgba(236,72,153,0.2); color: #fbcfe8; }
+    .cat-support { background: rgba(148,163,184,0.2); color: #cbd5e1; }
+
+    .review-list {
+        background: rgba(239,68,68,0.1);
+        border-left: 4px solid var(--red);
+        padding: 18px 22px; border-radius: 12px;
+        text-align: left; max-width: 700px; margin: 20px auto;
+    }
+    .review-list h3 {
+        color: #fca5a5; margin-bottom: 10px;
+        font-size: 0.95rem; text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .review-list ul {
+        padding-left: 20px; color: #cbd5e1;
+        line-height: 1.7; font-size: 0.9rem;
+    }
+
+    .action-row {
+        display: flex; gap: 12px;
+        justify-content: center; flex-wrap: wrap; margin-top: 20px;
+    }
+
+    @media (max-width: 700px) {
+        .organelle-grid.two { grid-template-columns: 1fr; }
+        .question-options { grid-template-columns: 1fr; }
+        .station-title { font-size: 1.25rem; }
+        .game-wrap { padding: 20px; }
+        #start-screen h1 { font-size: 1.75rem; }
+        .icon-big { font-size: 3.5rem; }
+        .score-big { font-size: 2.2rem; }
+        .hud-box { padding: 8px 12px; font-size: 0.75rem; }
+        .station-dot { width: 38px; height: 38px; font-size: 0.8rem; }
+        .chart-table { font-size: 0.75rem; }
+        .chart-table th, .chart-table td { padding: 8px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<header>
+    <a href="../index.html" class="back-btn">← Dashboard</a>
+    <div class="hud">
+        <div class="hud-box">Station: <span id="hud-station">0</span>/6</div>
+        <div class="hud-box">Score: <span id="hud-score">0</span></div>
+        <button class="sound-toggle" id="sound-toggle" title="Toggle music &amp; sound">🔊</button>
+    </div>
+</header>
+
+<div class="game-wrap">
+    <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+
+    <!-- ============ START SCREEN ============ -->
+    <div id="start-screen" class="screen active">
+        <div class="icon-big">🔬</div>
+        <h1>Organelle Stations Rotation</h1>
+        <p>Welcome, junior cell biologists! You'll rotate through <strong>6 stations</strong> — just like a real lab tour. At each station, you'll examine organelles and answer a key question about their <strong>structure–function relationship</strong>.</p>
+
+        <div class="intro-box">
+            <h3>📊 What You'll Do</h3>
+            <ul>
+                <li>Explore <strong>11 organelles</strong> across 6 thematic stations</li>
+                <li>Answer the <strong>Key Question</strong> at each station</li>
+                <li>Discover <strong>Fun Facts</strong> about real science</li>
+                <li>Learn the <strong>structure → function</strong> connection</li>
+            </ul>
+        </div>
+
+        <button class="btn-primary" id="start-btn">Begin Station Tour 🚀</button>
+    </div>
+
+    <!-- ============ PLAY SCREEN ============ -->
+    <div id="play-screen" class="screen">
+
+        <!-- Station Dots -->
+        <div class="station-bar" id="station-bar"></div>
+
+        <!-- Station Content -->
+        <div id="station-content">
+            <div class="station-header">
+                <div class="station-tag" id="station-tag">Station 1</div>
+                <div class="station-title" id="station-title"></div>
+                <div class="station-subtitle" id="station-subtitle"></div>
+            </div>
+
+            <div class="organelle-grid two" id="organelle-grid"></div>
+
+            <div class="question-box" id="question-box">
+                <div class="question-label">❓ Key Question</div>
+                <div class="question-text" id="question-text"></div>
+                <div class="question-options" id="question-options"></div>
+            </div>
+
+            <div class="fun-fact" id="fun-fact-box">
+                <div class="fun-fact-icon">💡</div>
+                <div class="fun-fact-content">
+                    <div class="fun-fact-label">Fun Fact</div>
+                    <div class="fun-fact-text" id="fun-fact-text"></div>
+                </div>
+            </div>
+
+            <div class="sf-tip" id="sf-tip-box">
+                <div class="sf-tip-icon">🔗</div>
+                <div class="sf-tip-content">
+                    <div class="sf-tip-label">Structure → Function</div>
+                    <div class="sf-tip-text" id="sf-tip-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="station-nav">
+            <button class="nav-btn" id="prev-btn">← Previous</button>
+            <div class="station-progress">Station <span id="nav-current">1</span> of <span>6</span></div>
+            <button class="nav-btn primary" id="next-btn">Next Station →</button>
+        </div>
+    </div>
+
+    <!-- ============ RESULTS SCREEN ============ -->
+    <div id="results-screen" class="screen">
+        <div class="level-badge" id="level-badge">🌟</div>
+        <h1 id="results-title">Station Tour Complete!</h1>
+        <div class="level-title" id="level-title"></div>
+        <div class="score-big" id="final-score">0<span>/6</span></div>
+        <p id="results-msg"></p>
+
+        <div class="master-chart">
+            <h3>📊 Organelle Master Chart</h3>
+            <table class="chart-table">
+                <thead>
+                    <tr>
+                        <th>Organelle</th>
+                        <th>Structure</th>
+                        <th>Function</th>
+                        <th>Category</th>
+                        <th>Present In</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Nucleus</td>
+                        <td>Large, round, membrane-bound; contains DNA</td>
+                        <td>Controls cell activities; stores genetic info</td>
+                        <td><span class="cat-pill cat-synthesis">Synthesis</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Mitochondria</td>
+                        <td>Oval, double membrane; inner folds (cristae)</td>
+                        <td>Produces ATP through cellular respiration</td>
+                        <td><span class="cat-pill cat-energy">Energy</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Ribosomes</td>
+                        <td>Tiny dots; free-floating or on ER</td>
+                        <td>Makes proteins</td>
+                        <td><span class="cat-pill cat-synthesis">Synthesis</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Rough ER</td>
+                        <td>Network of tubes with ribosomes attached</td>
+                        <td>Transports proteins; protein synthesis</td>
+                        <td><span class="cat-pill cat-transport">Transport/Synthesis</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Smooth ER</td>
+                        <td>Network of tubes without ribosomes</td>
+                        <td>Makes lipids; detoxifies</td>
+                        <td><span class="cat-pill cat-transport">Transport/Synthesis</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Golgi Apparatus</td>
+                        <td>Stack of flattened sacs</td>
+                        <td>Modifies, sorts, packages proteins</td>
+                        <td><span class="cat-pill cat-transport">Transport</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Lysosomes</td>
+                        <td>Small, round sacs with enzymes</td>
+                        <td>Breaks down waste and old cell parts</td>
+                        <td><span class="cat-pill cat-storage">Storage/Recycling</span></td>
+                        <td>Animal (rare in plants)</td>
+                    </tr>
+                    <tr>
+                        <td>Vacuoles</td>
+                        <td>Large sac (plants); small (animals)</td>
+                        <td>Stores water, nutrients, waste</td>
+                        <td><span class="cat-pill cat-storage">Storage</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Chloroplasts</td>
+                        <td>Oval, green; contains chlorophyll</td>
+                        <td>Captures light energy for photosynthesis</td>
+                        <td><span class="cat-pill cat-energy">Energy</span></td>
+                        <td>Plant only</td>
+                    </tr>
+                    <tr>
+                        <td>Cell Membrane</td>
+                        <td>Thin, flexible layer around cell</td>
+                        <td>Controls what enters and exits the cell</td>
+                        <td><span class="cat-pill cat-transport">Transport</span></td>
+                        <td>Plant &amp; Animal</td>
+                    </tr>
+                    <tr>
+                        <td>Cell Wall</td>
+                        <td>Rigid outer layer</td>
+                        <td>Provides support and protection</td>
+                        <td><span class="cat-pill cat-support">Support</span></td>
+                        <td>Plant only</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="review-list" id="review-box" style="display:none;">
+            <h3>📚 Review These Stations</h3>
+            <ul id="review-list"></ul>
+        </div>
+
+        <div class="action-row">
+            <button class="btn-primary" id="restart-btn">Tour Again</button>
+            <a href="../index.html" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   STATION DATA
+   ============================================================ */
+const stations = [
+    {
+        tag: "Station 1",
+        title: "🧠 Nucleus & Ribosomes",
+        subtitle: "The command center and its protein factories.",
+        organelles: [
+            {
+                emoji: "🧠", name: "Nucleus",
+                structure: "Large, round, membrane-bound; contains DNA",
+                func: "Controls cell activities; stores genetic information",
+                category: "Synthesis", present: "Plant & Animal"
+            },
+            {
+                emoji: "🏭", name: "Ribosomes",
+                structure: "Tiny dots; free-floating or on ER",
+                func: "Makes proteins",
+                category: "Synthesis", present: "Plant & Animal"
+            }
+        ],
+        question: "Why does the nucleus have pores?",
+        options: [
+            "To let light enter the nucleus for photosynthesis",
+            "To allow molecules like mRNA and proteins to move in and out",
+            "To store extra DNA outside the nucleus",
+            "To let the nucleus breathe like a lung"
+        ],
+        correct: 1,
+        qExplain: "Nuclear pores are gateways — they let mRNA (carrying instructions to ribosomes) exit, and proteins (like enzymes) enter. That's how the nucleus controls the cell!",
+        funFact: "If stretched out, the DNA in one human cell would be about <strong>2 meters long</strong>!",
+        sfTip: "The nucleus has a double membrane with pores — structure designed for <strong>selective communication</strong> with the cytoplasm."
+    },
+    {
+        tag: "Station 2",
+        title: "⚡ Mitochondria & Chloroplasts",
+        subtitle: "The cell's energy twins — one makes ATP, one captures sunlight.",
+        organelles: [
+            {
+                emoji: "⚡", name: "Mitochondria",
+                structure: "Oval, double membrane; inner folds (cristae)",
+                func: "Produces ATP energy through cellular respiration",
+                category: "Energy", present: "Plant & Animal"
+            },
+            {
+                emoji: "☀️", name: "Chloroplasts",
+                structure: "Oval, green; contains chlorophyll",
+                func: "Captures light energy for photosynthesis",
+                category: "Energy", present: "Plant only"
+            }
+        ],
+        question: "Why do muscle cells have more mitochondria than skin cells?",
+        options: [
+            "Muscle cells are bigger and need more space",
+            "Muscle cells need more energy (ATP), so they have more mitochondria",
+            "Skin cells can't make proteins",
+            "Muscle cells don't need ATP"
+        ],
+        correct: 1,
+        qExplain: "Muscles contract constantly — they need lots of ATP. More mitochondria = more energy production. This is the structure–function connection in action!",
+        funFact: "Mitochondria have their own DNA — and you inherited yours <strong>only from your mother</strong>!",
+        sfTip: "Mitochondria have <strong>folded inner membranes (cristae)</strong> — more folds = more surface area = more ATP production."
+    },
+    {
+        tag: "Station 3",
+        title: "🛣️ Endoplasmic Reticulum",
+        subtitle: "The cell's highway system — rough and smooth variants.",
+        organelles: [
+            {
+                emoji: "🛣️", name: "Rough ER",
+                structure: "Network of tubes with ribosomes attached",
+                func: "Transports proteins; protein synthesis",
+                category: "Transport/Synthesis", present: "Plant & Animal"
+            },
+            {
+                emoji: "🛤️", name: "Smooth ER",
+                structure: "Network of tubes without ribosomes",
+                func: "Makes lipids; detoxifies chemicals",
+                category: "Transport/Synthesis", present: "Plant & Animal"
+            }
+        ],
+        question: "Why is rough ER called 'rough'?",
+        options: [
+            "It has a bumpy outer membrane",
+            "It has ribosomes attached to its surface",
+            "It's made of rough proteins",
+            "It's rougher than the smooth ER in texture"
+        ],
+        correct: 1,
+        qExplain: "The 'roughness' comes from ribosomes attached to its surface. Those ribosomes build proteins that enter the ER's tubes for transport — that's the structure–function link!",
+        funFact: "Liver cells have <strong>lots of smooth ER</strong> to detoxify chemicals like alcohol and drugs.",
+        sfTip: "Rough ER = ribosomes attached → protein synthesis + transport. Smooth ER = no ribosomes → lipid synthesis + detoxification."
+    },
+    {
+        tag: "Station 4",
+        title: "📮 Golgi Apparatus & Vesicles",
+        subtitle: "The cell's post office — sorting and shipping.",
+        organelles: [
+            {
+                emoji: "📮", name: "Golgi Apparatus",
+                structure: "Stack of flattened sacs",
+                func: "Modifies, sorts, and packages proteins",
+                category: "Transport", present: "Plant & Animal"
+            },
+            {
+                emoji: "📦", name: "Vesicles",
+                structure: "Small membrane-bound sacs that pinch off",
+                func: "Carry materials to their destinations",
+                category: "Transport", present: "Plant & Animal"
+            }
+        ],
+        question: "How is the Golgi like a post office?",
+        options: [
+            "It sends emails to other cells",
+            "It receives, modifies, sorts, and ships proteins to their destinations",
+            "It only handles mail-like shapes",
+            "It writes messages on proteins"
+        ],
+        correct: 1,
+        qExplain: "The Golgi receives proteins from the ER, modifies them, packages them into vesicles, and ships them to their correct addresses. Just like a post office!",
+        funFact: "The Golgi was discovered by <strong>Camillo Golgi in 1898</strong> — he had to invent a special staining method to see it!",
+        sfTip: "Golgi's stacked sacs are perfect for <strong>sequential processing</strong> — proteins move from one cisterna to the next, getting modified step by step."
+    },
+    {
+        tag: "Station 5",
+        title: "♻️ Lysosomes & Vacuoles",
+        subtitle: "The cell's recycling center and warehouses.",
+        organelles: [
+            {
+                emoji: "♻️", name: "Lysosomes",
+                structure: "Small, round sacs with digestive enzymes",
+                func: "Breaks down waste and old cell parts",
+                category: "Storage/Recycling", present: "Animal (rare in plants)"
+            },
+            {
+                emoji: "💧", name: "Vacuoles",
+                structure: "Large central sac (plants); smaller (animals)",
+                func: "Stores water, nutrients, and waste",
+                category: "Storage", present: "Plant & Animal"
+            }
+        ],
+        question: "Why do plant cells have a large central vacuole?",
+        options: [
+            "To store extra chloroplasts",
+            "To store water and maintain turgor pressure for support",
+            "To hold the nucleus in place",
+            "To make proteins faster"
+        ],
+        correct: 1,
+        qExplain: "The central vacuole fills with water, pushing outward against the cell wall. This turgor pressure keeps plants upright and firm — that's why wilted plants look droopy!",
+        funFact: "Lysosomes are sometimes called '<strong>suicide sacs</strong>' because they can burst and digest the cell itself.",
+        sfTip: "Plant vacuoles are HUGE — up to <strong>90% of the cell's volume</strong>. Structure designed for maximum storage."
+    },
+    {
+        tag: "Station 6",
+        title: "🏰 Cell Membrane & Cell Wall",
+        subtitle: "The cell's gates and outer fortress.",
+        organelles: [
+            {
+                emoji: "🛡️", name: "Cell Membrane",
+                structure: "Thin, flexible phospholipid bilayer with proteins",
+                func: "Controls what enters and exits the cell",
+                category: "Transport", present: "Plant & Animal"
+            },
+            {
+                emoji: "🧱", name: "Cell Wall",
+                structure: "Rigid outer layer made of cellulose",
+                func: "Provides support and protection",
+                category: "Support", present: "Plant only"
+            }
+        ],
+        question: "Why is the cell membrane called 'selectively permeable'?",
+        options: [
+            "It lets only water through",
+            "It allows some substances to pass but blocks others",
+            "It's too thin to be seen",
+            "It only works in plant cells"
+        ],
+        correct: 1,
+        qExplain: "Selectively permeable means the membrane chooses what gets in and out — small molecules like oxygen pass easily, but large or harmful ones are blocked. It's the cell's gatekeeper!",
+        funFact: "The cell membrane is so thin that <strong>10,000 stacked</strong> would be about the thickness of a sheet of paper!",
+        sfTip: "The phospholipid bilayer has <strong>hydrophilic heads</strong> (facing water) and <strong>hydrophobic tails</strong> (facing inward) — a structure that naturally forms a barrier."
+    }
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = {
+    stationIdx: 0,
+    score: 0,
+    visited: new Set(),
+    answered: new Set(),   // station indexes already answered
+    mistakes: [],
+    soundOn: true
+};
+
+const D = {
+    startScreen: document.getElementById('start-screen'),
+    playScreen: document.getElementById('play-screen'),
+    resultsScreen: document.getElementById('results-screen'),
+    startBtn: document.getElementById('start-btn'),
+    restartBtn: document.getElementById('restart-btn'),
+    prevBtn: document.getElementById('prev-btn'),
+    nextBtn: document.getElementById('next-btn'),
+    stationBar: document.getElementById('station-bar'),
+    stationTag: document.getElementById('station-tag'),
+    stationTitle: document.getElementById('station-title'),
+    stationSubtitle: document.getElementById('station-subtitle'),
+    organelleGrid: document.getElementById('organelle-grid'),
+    questionText: document.getElementById('question-text'),
+    questionOptions: document.getElementById('question-options'),
+    funFactText: document.getElementById('fun-fact-text'),
+    sfTipText: document.getElementById('sf-tip-text'),
+    hudStation: document.getElementById('hud-station'),
+    hudScore: document.getElementById('hud-score'),
+    prog: document.getElementById('prog'),
+    navCurrent: document.getElementById('nav-current'),
+    levelBadge: document.getElementById('level-badge'),
+    levelTitle: document.getElementById('level-title'),
+    finalScore: document.getElementById('final-score'),
+    resultsMsg: document.getElementById('results-msg'),
+    reviewBox: document.getElementById('review-box'),
+    reviewList: document.getElementById('review-list'),
+    soundToggle: document.getElementById('sound-toggle'),
+    particles: document.getElementById('particles')
+};
+
+/* ============================================================
+   AUDIO
+   ============================================================ */
+let audioCtx = null;
+let musicLoop = null;
+let musicGain = null;
+let musicPlaying = false;
+
+function initAudio() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { console.warn('Audio not supported'); }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function beep(freq, dur, type, vol) {
+    if (!state.soundOn || !audioCtx) return;
+    try {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = type || 'sine';
+        o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
+}
+
+const sfx = {
+    click: () => beep(500, 0.08, 'triangle', 0.12),
+    correct: () => {
+        beep(523, 0.15, 'sine', 0.18);
+        setTimeout(() => beep(659, 0.15, 'sine', 0.18), 100);
+        setTimeout(() => beep(784, 0.25, 'sine', 0.18), 200);
+    },
+    wrong: () => {
+        beep(200, 0.15, 'sawtooth', 0.15);
+        setTimeout(() => beep(150, 0.25, 'sawtooth', 0.15), 100);
+    },
+    finish: () => {
+        const notes = [523, 659, 784, 1047, 1319];
+        notes.forEach((n, i) => setTimeout(() => beep(n, 0.22, 'square', 0.15), i * 120));
+    },
+    whoosh: () => {
+        if (!state.soundOn || !audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(200, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.2);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+        o.start(); o.stop(audioCtx.currentTime + 0.25);
+    }
+};
+
+/* ============================================================
+   LIVELY CHIPTUNE MUSIC
+   ============================================================ */
+function startBackgroundMusic() {
+    if (!state.soundOn || !audioCtx || musicPlaying) return;
+    musicPlaying = true;
+
+    musicGain = audioCtx.createGain();
+    musicGain.gain.value = 0.055;
+    musicGain.connect(audioCtx.destination);
+
+    const progression = [
+        { bass: 130.81, arp: [261.63, 329.63, 392.00, 523.25] },
+        { bass: 110.00, arp: [220.00, 261.63, 329.63, 440.00] },
+        { bass: 87.31,  arp: [174.61, 220.00, 261.63, 349.23] },
+        { bass: 98.00,  arp: [196.00, 246.94, 293.66, 392.00] }
+    ];
+    const STEP_MS = 130;
+    const STEPS_PER_CHORD = 16;
+    let step = 0;
+    let chordIdx = 0;
+
+    function playNote(freq, durSec, type, vol, attack) {
+        if (!audioCtx || !musicGain) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(musicGain);
+        o.type = type;
+        o.frequency.value = freq;
+        const now = audioCtx.currentTime;
+        const a = attack || 0.01;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(vol, now + a);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + durSec);
+        o.start(now); o.stop(now + durSec + 0.05);
+    }
+
+    function playHat(vol) {
+        if (!audioCtx || !musicGain) return;
+        const bufSize = audioCtx.sampleRate * 0.05;
+        const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        const g = audioCtx.createGain();
+        g.gain.value = vol;
+        const hp = audioCtx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.value = 7000;
+        src.connect(hp); hp.connect(g); g.connect(musicGain);
+        src.start();
+    }
+
+    function tick() {
+        if (!musicPlaying || !state.soundOn) return;
+        const chord = progression[chordIdx];
+        const s = step % STEPS_PER_CHORD;
+
+        if (s % 2 === 0) {
+            const bassNote = (s % 4 === 0) ? chord.bass : chord.bass * 2;
+            playNote(bassNote, 0.16, 'square', 0.35, 0.005);
+        }
+        const playMelody = [0, 1, 2, 3, 4, 6, 8, 10, 12, 14].includes(s);
+        if (playMelody) {
+            const noteIdx = s % 4;
+            const freq = chord.arp[noteIdx];
+            const vol = (s === 0) ? 0.28 : 0.18;
+            playNote(freq, 0.11, 'triangle', vol, 0.005);
+        }
+        if (s === 8) playNote(chord.arp[3] * 2, 0.14, 'triangle', 0.22, 0.005);
+        if (s % 2 === 1) playHat(0.08);
+        if (s % 4 === 0) playHat(0.12);
+
+        step++;
+        if (step % STEPS_PER_CHORD === 0) chordIdx = (chordIdx + 1) % progression.length;
+    }
+    tick();
+    musicLoop = setInterval(tick, STEP_MS);
+}
+
+function stopBackgroundMusic() {
+    musicPlaying = false;
+    if (musicLoop) { clearInterval(musicLoop); musicLoop = null; }
+    if (musicGain) {
+        try {
+            musicGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+            setTimeout(() => { try { musicGain.disconnect(); } catch (e) {} }, 300);
+        } catch (e) {}
+        musicGain = null;
+    }
+}
+
+/* ============================================================
+   GAME LOGIC
+   ============================================================ */
+function showScreen(screen) {
+    [D.startScreen, D.playScreen, D.resultsScreen].forEach(s => s.classList.remove('active'));
+    screen.classList.add('active');
+}
+
+function startGame() {
+    initAudio();
+    sfx.whoosh();
+    state = { stationIdx: 0, score: 0, visited: new Set(), answered: new Set(), mistakes: [], soundOn: state.soundOn };
+    D.hudScore.textContent = 0;
+    D.reviewBox.style.display = 'none';
+    showScreen(D.playScreen);
+    startBackgroundMusic();
+    updateSoundToggleUI();
+    buildStationBar();
+    loadStation();
+}
+
+function buildStationBar() {
+    D.stationBar.innerHTML = '';
+    stations.forEach((s, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'station-dot';
+        dot.textContent = i + 1;
+        dot.title = s.title;
+        dot.onclick = () => {
+            sfx.click();
+            state.stationIdx = i;
+            loadStation();
+        };
+        D.stationBar.appendChild(dot);
+    });
+}
+
+function updateStationBar() {
+    const dots = D.stationBar.querySelectorAll('.station-dot');
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === state.stationIdx);
+        dot.classList.toggle('visited', state.visited.has(i));
+        // Add check mark if visited and not active
+        dot.innerHTML = (i + 1);
+        if (state.visited.has(i) && i !== state.stationIdx) {
+            const check = document.createElement('span');
+            check.className = 'check';
+            check.textContent = '✓';
+            dot.appendChild(check);
+        }
+    });
+}
+
+function loadStation() {
+    const s = stations[state.stationIdx];
+    state.visited.add(state.stationIdx);
+
+    D.stationTag.textContent = s.tag;
+    D.stationTitle.textContent = s.title;
+    D.stationSubtitle.textContent = s.subtitle;
+    D.hudStation.textContent = state.stationIdx + 1;
+    D.navCurrent.textContent = state.stationIdx + 1;
+
+    const total = stations.length;
+    D.prog.style.width = `${(state.visited.size / total) * 100}%`;
+
+    // Render organelle cards
+    D.organelleGrid.innerHTML = '';
+    s.organelles.forEach(org => {
+        const card = document.createElement('div');
+        card.className = 'organelle-card';
+        card.innerHTML = `
+            <div class="organelle-header">
+                <span class="organelle-emoji">${org.emoji}</span>
+                <span class="organelle-name">${org.name}</span>
+            </div>
+            <div class="organelle-section">
+                <span class="organelle-label label-structure">Structure</span>
+                <span class="content">${org.structure}</span>
+            </div>
+            <div class="organelle-section">
+                <span class="organelle-label label-function">Function</span>
+                <span class="content">${org.func}</span>
+            </div>
+            <div class="organelle-section">
+                <span class="organelle-label label-category">Category</span>
+                <span class="content">${org.category}</span>
+            </div>
+            <div class="organelle-section">
+                <span class="organelle-label label-present">Present In</span>
+                <span class="content">${org.present}</span>
+            </div>
+        `;
+        D.organelleGrid.appendChild(card);
+    });
+
+    // Render question
+    D.questionText.textContent = s.question;
+    D.questionOptions.innerHTML = '';
+    const alreadyAnswered = state.answered.has(state.stationIdx);
+    s.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'question-opt';
+        btn.textContent = opt;
+        btn.disabled = alreadyAnswered;
+        if (alreadyAnswered) {
+            if (i === s.correct) btn.classList.add('correct');
+        }
+        btn.onclick = () => answerQuestion(i, s);
+        D.questionOptions.appendChild(btn);
+    });
+
+    // Fun fact & SF tip
+    D.funFactText.innerHTML = s.funFact;
+    D.sfTipText.innerHTML = s.sfTip;
+
+    // Nav buttons
+    D.prevBtn.disabled = state.stationIdx === 0;
+    D.nextBtn.textContent = state.stationIdx === stations.length - 1
+        ? 'See Results →'
+        : 'Next Station →';
+
+    updateStationBar();
+}
+
+function answerQuestion(choice, station) {
+    if (state.answered.has(state.stationIdx)) return;
+    state.answered.add(state.stationIdx);
+
+    const isCorrect = choice === station.correct;
+    const opts = D.questionOptions.querySelectorAll('.question-opt');
+    opts.forEach((o, i) => {
+        o.disabled = true;
+        if (i === station.correct) o.classList.add('correct');
+        else if (i === choice && !isCorrect) o.classList.add('wrong');
+    });
+
+    if (isCorrect) {
+        sfx.correct();
+        state.score++;
+        D.hudScore.textContent = state.score;
+        // Append explanation as a small note
+        appendExplanation(station.qExplain, true);
+    } else {
+        sfx.wrong();
+        state.mistakes.push(station.tag + ' — ' + station.title);
+        appendExplanation(station.qExplain, false);
+    }
+}
+
+function appendExplanation(text, correct) {
+    // Remove any previous explanation
+    const existing = document.querySelector('.q-explanation');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.className = 'q-explanation';
+    div.style.cssText = `
+        margin-top: 14px; padding: 12px 16px; border-radius: 10px;
+        font-size: 0.9rem; line-height: 1.5;
+        background: ${correct ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
+        border-left: 3px solid ${correct ? '#10b981' : '#ef4444'};
+        color: #cbd5e1;
+    `;
+    div.innerHTML = `<strong style="color:white">${correct ? '✅ Correct!' : '❌ Not quite.'}</strong> ${text}`;
+    D.questionOptions.parentElement.appendChild(div);
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+D.prevBtn.addEventListener('click', () => {
+    if (state.stationIdx > 0) {
+        sfx.click();
+        state.stationIdx--;
+        loadStation();
+    }
+});
+
+D.nextBtn.addEventListener('click', () => {
+    sfx.click();
+    if (state.stationIdx < stations.length - 1) {
+        state.stationIdx++;
+        loadStation();
+    } else {
+        endGame();
+    }
+});
+
+function endGame() {
+    stopBackgroundMusic();
+    sfx.finish();
+    showScreen(D.resultsScreen);
+    D.prog.style.width = '100%';
+
+    const total = stations.length;
+    D.finalScore.innerHTML = `${state.score}<span>/${total}</span>`;
+
+    const pct = state.score / total;
+    let badge, title, msg;
+    if (pct === 1) {
+        badge = '🏆';
+        title = 'Cell Biology Master!';
+        msg = 'Perfect score! You mastered every station and understand structure-function relationships like a real scientist.';
+    } else if (pct >= 0.75) {
+        badge = '⭐';
+        title = 'Lab Expert';
+        msg = 'Excellent work! You completed most stations correctly. Review the ones you missed below.';
+    } else if (pct >= 0.5) {
+        badge = '🔬';
+        title = 'Rising Researcher';
+        msg = 'Good effort! You\'re building a strong understanding of organelles. Review and try again.';
+    } else {
+        badge = '📖';
+        title = 'Curious Explorer';
+        msg = 'Great start! Cells are complex — review the master chart below and try again. You\'ll get there!';
+    }
+
+    D.levelBadge.textContent = badge;
+    D.levelTitle.textContent = title;
+    D.resultsMsg.textContent = msg;
+
+    if (state.mistakes.length > 0) {
+        D.reviewBox.style.display = 'block';
+        const uniq = [...new Set(state.mistakes)];
+        D.reviewList.innerHTML = uniq.map(m => `<li><strong>${m}</strong></li>`).join('');
+    } else {
+        D.reviewBox.style.display = 'none';
+    }
+    updateSoundToggleUI();
+}
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+function updateSoundToggleUI() {
+    D.soundToggle.textContent = state.soundOn ? '🔊' : '🔇';
+    if (state.soundOn && D.playScreen.classList.contains('active')) {
+        D.soundToggle.classList.add('playing');
+    } else {
+        D.soundToggle.classList.remove('playing');
+    }
+}
+
+/* ============================================================
+   EVENT LISTENERS
+   ============================================================ */
+D.startBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+D.restartBtn.addEventListener('click', () => { sfx.click(); startGame(); });
+
+D.soundToggle.addEventListener('click', () => {
+    initAudio();
+    state.soundOn = !state.soundOn;
+    updateSoundToggleUI();
+    if (state.soundOn) {
+        sfx.click();
+        if (D.playScreen.classList.contains('active')) startBackgroundMusic();
+    } else {
+        stopBackgroundMusic();
+    }
+});
+
+/* ============================================================
+   DECORATIVE PARTICLES
+   ============================================================ */
+function createParticles() {
+    const colors = ['#8b5cf6', '#06b6d4', '#ec4899', '#fbbf24', '#10b981'];
+    for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 40 + 15;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (Math.random() * 25 + 20) + 's';
+        p.style.animationDelay = (Math.random() * 15) + 's';
+        D.particles.appendChild(p);
+    }
+}
+createParticles();
+
+document.addEventListener('click', function unlockAudio() {
+    initAudio();
+    document.removeEventListener('click', unlockAudio);
+}, { once: true });
+</script>
+</body>
+</html>
