@@ -199,9 +199,10 @@
     .scene-title {
         font-size: 1.7rem; font-weight: 700;
         margin-bottom: 8px; line-height: 1.3;
+        color: white;
     }
     .scene-desc {
-        color: var(--muted); font-size: 1rem;
+        color: #cbd5e1; font-size: 1rem;
         max-width: 700px; margin: 0 auto; line-height: 1.5;
     }
 
@@ -234,7 +235,7 @@
         color: white; font-weight: 700;
     }
     .organelle-card .desc {
-        color: var(--muted); font-size: 0.95rem;
+        color: #cbd5e1; font-size: 0.95rem;
         max-width: 500px; margin: 0 auto; line-height: 1.5;
     }
 
@@ -270,13 +271,22 @@
         align-items: center;
         gap: 14px;
         text-align: left;
+        color: white !important;
     }
     .category-btn .cat-icon {
         font-size: 1.8rem; flex-shrink: 0;
     }
     .category-btn .cat-info { line-height: 1.3; }
-    .category-btn .cat-title { color: white; margin-bottom: 3px; }
-    .category-btn .cat-sub { color: var(--muted); font-size: 0.75rem; font-weight: 500; }
+    .category-btn .cat-title {
+        color: white !important;
+        margin-bottom: 3px;
+        font-weight: 700;
+    }
+    .category-btn .cat-sub {
+        color: #cbd5e1 !important;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
 
     .category-btn:hover:not(:disabled) {
         transform: translateY(-4px);
@@ -332,9 +342,14 @@
         align-items: center;
         gap: 14px;
         text-align: left;
+        color: white !important;
     }
     .analogy-btn .analogy-icon {
         font-size: 1.8rem; flex-shrink: 0;
+    }
+    .analogy-btn span:not(.analogy-icon) {
+        color: white !important;
+        font-weight: 700;
     }
     .analogy-btn:hover:not(:disabled) {
         border-color: var(--cyan);
@@ -361,6 +376,7 @@
         border-radius: 14px; margin-bottom: 15px;
         line-height: 1.55; font-size: 0.95rem;
         animation: slide 0.4s;
+        color: #cbd5e1;
     }
     .feedback.show { display: block; }
     .feedback.ok {
@@ -379,6 +395,7 @@
         font-size: 0.75rem; font-weight: bold;
         text-transform: uppercase; letter-spacing: 1px;
         margin-bottom: 8px;
+        color: white;
     }
     @keyframes slide {
         from { opacity: 0; transform: translateY(10px); }
@@ -416,7 +433,7 @@
     }
     .score-big span { font-size: 1.5rem; color: var(--muted); }
     #results-msg {
-        color: var(--muted); font-size: 1rem;
+        color: #cbd5e1; font-size: 1rem;
         line-height: 1.6; max-width: 700px; margin: 0 auto 20px;
     }
 
@@ -721,7 +738,7 @@ const organelles = [
 let state = {
     idx: 0,
     score: 0,
-    phase: 1,           // 1 = category, 2 = analogy
+    phase: 1,
     answered: false,
     mistakes: [],
     soundOn: true
@@ -818,9 +835,6 @@ const sfx = {
     }
 };
 
-/* ============================================================
-   LIVELY CHIPTUNE BACKGROUND MUSIC
-   ============================================================ */
 function startBackgroundMusic() {
     if (!state.soundOn || !audioCtx || musicPlaying) return;
     musicPlaying = true;
@@ -951,27 +965,22 @@ function loadQuestion() {
     const org = organelles[state.idx];
     state.answered = false;
 
-    // Organelle card
     D.organelleIcon.textContent = org.emoji;
     D.organelleName.textContent = org.name;
     D.organelleDesc.textContent = org.desc;
 
-    // Scene tag
     D.sceneTag.textContent = `Organelle #${state.idx + 1} • ${org.name}`;
 
-    // Phase indicator & progress
     updatePhaseUI();
     const total = organelles.length * 2;
     const completed = state.idx * 2 + (state.phase - 1);
     D.prog.style.width = `${(completed / total) * 100}%`;
     updateTotalHUD();
 
-    // Reset feedback
     D.feedback.className = 'feedback';
     D.feedback.innerHTML = '';
     D.nextBtn.classList.remove('show');
 
-    // Show correct phase
     if (state.phase === 1) {
         D.phase1.style.display = 'block';
         D.phase2.style.display = 'none';
@@ -993,7 +1002,6 @@ function renderCategoryButtons(org) {
 }
 
 function renderAnalogyButtons(org) {
-    // Shuffle analogy options
     const shuffled = [...org.analogyOptions];
     for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -1004,7 +1012,6 @@ function renderAnalogyButtons(org) {
     shuffled.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'analogy-btn';
-        // Extract emoji from analogy string (first part before space)
         const parts = opt.split(' ');
         const emoji = parts[0];
         const rest = parts.slice(1).join(' ');
@@ -1042,7 +1049,6 @@ function answerCategory(btn, choice, org) {
         btn.classList.add('wrong');
         sfx.wrong();
         state.mistakes.push(`${org.name} — Category`);
-        // Highlight correct
         btns.forEach(b => {
             if (b.dataset.cat === org.category) b.classList.add('correct');
         });
@@ -1153,9 +1159,6 @@ function endGame() {
     updateSoundToggleUI();
 }
 
-/* ============================================================
-   UI HELPERS
-   ============================================================ */
 function updateSoundToggleUI() {
     D.soundToggle.textContent = state.soundOn ? '🔊' : '🔇';
     if (state.soundOn && D.playScreen.classList.contains('active')) {
@@ -1165,9 +1168,6 @@ function updateSoundToggleUI() {
     }
 }
 
-/* ============================================================
-   EVENT LISTENERS
-   ============================================================ */
 D.startBtn.addEventListener('click', () => { sfx.click(); startGame(); });
 D.restartBtn.addEventListener('click', () => { sfx.click(); startGame(); });
 
@@ -1183,9 +1183,6 @@ D.soundToggle.addEventListener('click', () => {
     }
 });
 
-/* ============================================================
-   DECORATIVE PARTICLES
-   ============================================================ */
 function createParticles() {
     const colors = ['#8b5cf6', '#06b6d4', '#ec4899', '#fbbf24', '#10b981'];
     for (let i = 0; i < 18; i++) {
